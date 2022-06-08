@@ -3,7 +3,7 @@
 
 
   <div >
-
+    
     <Keypress key-event="keydown" :key-code="27" @success="closeModal" />
     <Keypress key-event="keydown" :multiple-keys="[{keyCode: 66, modifiers: ['ctrlKey', 'shiftKey'],preventDefault: true}]" @success="togglePreCoordinated" />
 
@@ -526,7 +526,7 @@ export default {
           this.lookupConfig[l].modes.forEach((mode)=>{
             
             Object.keys(mode).forEach((k)=>{
-              options.push({label: k, urls:mode[k].url, processor:this.lookupConfig[l].processor, all:mode[k].all })
+              options.push({label: k, urls:mode[k].url, processor:this.lookupConfig[l].processor, minCharBeforeSearch: (this.lookupConfig[l].minCharBeforeSearch ? this.lookupConfig[l].minCharBeforeSearch : false), all:mode[k].all })
               // mark the first All one we find as the first one
               if (!this.modeSelect && mode[k].all){
                 this.modeSelect = k
@@ -622,7 +622,7 @@ export default {
 
       if (this.displayLabel.startsWith('http:')){
 
-        let userData = parseProfile.returnUserValues(this.activeProfile, this.profileCompoent, this.structure.propertyURI)
+        let userData = parseProfile.returnUserValues(this.activeProfile, this.profileName, this.profileCompoent, this.structure.propertyURI)
         
 
         // look for a @context in any of the properties
@@ -752,6 +752,13 @@ export default {
         use = true
       }
 
+
+      if (this.parentStructureObj && this.parentStructureObj.propertyURI=='http://www.loc.gov/mads/rdf/v1#componentList'){
+        use = true
+      }
+
+
+
       if (this.settingsLookupsUseTextSubjectEditor===false){
         use = false
       }
@@ -779,8 +786,8 @@ export default {
         if (this.validated === false) {
             //console.log("the this")
             //console.log(this)
-            let userData = parseProfile.returnUserValues(this.activeProfile, this.profileCompoent, this.structure.propertyURI)
 
+            let userData = parseProfile.returnUserValues(this.activeProfile, this.profileName, this.profileCompoent, this.structure.propertyURI)
             // dis connect it from the source so it doesnt update the value, read only
             userData = JSON.parse(JSON.stringify(userData))
 
@@ -791,38 +798,67 @@ export default {
             }
 
             
-
             if (userData !== false) {
                 validationUtil.validateHeading(userData)
                 .then((validationStatus) => {
-                    
-                    this.validated = validationStatus;
-                    this.validationMessage = validationUtil.getValidationMessage(validationStatus);
-                    
-                    if (userData["http://id.loc.gov/ontologies/bibframe/agent"] !== undefined) {
-                        // We have a contribution resource.
-                        // What we need is the agent.
-                        userData = userData["http://id.loc.gov/ontologies/bibframe/agent"][0];
-                    }
-                    // console.log("this.displayContext",this.displayContext)
 
-                    // Do we need to set the display URI because the userData ID changed?
-                    if (userData["@id"] !== this.displayContext.uri) {
-                        this.displayContext.uri = userData["@id"];
-                    }
-                    
-                    // Do we need to set the display labels because the userData label changed?
-                    var label = validationUtil.getLabel(userData);
-                    if (this.displayLabel != label) {
-                        this.displayLabel = label;
-                    }
-                    
+                  let orignalUserData = parseProfile.returnUserValues(this.activeProfile, this.profileName, this.profileCompoent, this.structure.propertyURI)
 
 
-                    if (this.displayContext.title != label) {
-                        this.displayContext.title = label;
+                  // console.log("USERDATA 3",JSON.parse(JSON.stringify(userData)))
+                  this.validated = validationStatus;
+                  this.validationMessage = validationUtil.getValidationMessage(validationStatus);
+                  
+                  if (userData["http://id.loc.gov/ontologies/bibframe/agent"] !== undefined) {
+                      // We have a contribution resource.
+                      // What we need is the agent.
+                      userData = userData["http://id.loc.gov/ontologies/bibframe/agent"][0];
+                  }
+                  if (orignalUserData["http://id.loc.gov/ontologies/bibframe/agent"] !== undefined) {
+                      // We have a contribution resource.
+                      // What we need is the agent.
+                      orignalUserData = orignalUserData["http://id.loc.gov/ontologies/bibframe/agent"][0];
+                  }
+
+
+                  // console.log("this.displayContext",this.displayContext)
+
+                  // Do we need to set the display URI because the userData ID changed?
+                  if (userData["@id"] !== this.displayContext.uri) {
+                      this.displayContext.uri = userData["@id"];
+                  }
+                  
+                  // Do we need to set the display labels because the userData label changed?
+                  var label = validationUtil.getLabel(userData);
+                  if (this.displayLabel != label) {
+                      this.displayLabel = label;
+                  }
+                  
+
+
+                  if (this.displayContext.title != label) {
+                      this.displayContext.title = label;
+                  }
+
+                  // console.log('userData is ',userData, 'for ', label)
+                  // console.log('orignalUserData is ',orignalUserData, 'for ', label)
+
+
+                  // if it is a name then when we validate also make sure that the 
+                  // uservalue is populated with the right stuff
+                  // sometimes a record will come in without a URI but it has a valid label
+                  if (!orignalUserData['@id']){
+                    if (userData["@id"].includes('id.loc.gov/authorities/names/')){
+                      this.$store.dispatch("fetchContext", { self: this, searchPayload: userData["@id"] }).then(() => {                      
+                        // console.log("SETTING THE VALUE ON",this.profileName)
+                        // console.log("USER VALUE WAS:",userData)
+                        this.$store.dispatch("setValueComplex", { self: this, profileComponet: this.profileCompoent, template:this.profileName, structure: this.structure, parentStructure: this.parentStructureObj }).then(() => {
+                          this.componentKey++
+                        })  
+                      })    
                     }
-                    
+                  }
+
 
 
                     
@@ -1013,14 +1049,18 @@ export default {
       let userValue 
       let rootPropertyURI
 
+
+
       if (this.isMini){
-        userValue = parseProfile.returnUserValues(this.activeProfileMini, this.profileCompoent,this.structure.propertyURI)
+        userValue = parseProfile.returnUserValues(this.activeProfileMini, this.profileName, this.profileCompoent,this.structure.propertyURI)
         rootPropertyURI = parseProfile.returnRootPropertyURI(this.activeProfileMini, this.profileCompoent,this.structure.propertyURI)        
       }else{
-        userValue = parseProfile.returnUserValues(this.activeProfile, this.profileCompoent,this.structure.propertyURI)
+        userValue = parseProfile.returnUserValues(this.activeProfile, this.profileName, this.profileCompoent,this.structure.propertyURI)
         rootPropertyURI = parseProfile.returnRootPropertyURI(this.activeProfile, this.profileCompoent,this.structure.propertyURI)        
       }
     
+      
+      
       if (userValue['http://www.w3.org/2000/01/rdf-schema#label'] || userValue['http://www.loc.gov/mads/rdf/v1#authoritativeLabel'] || userValue['http://id.loc.gov/ontologies/bibframe/code']){
 
         if (userValue['http://www.w3.org/2000/01/rdf-schema#label']){
@@ -1355,7 +1395,9 @@ export default {
       this.$store.dispatch("setActiveInput", { self: this, id: event.target.id, profileCompoent: this.profileCompoent, profileName: this.profileName }).then(()=>{
 
         // now focus the side bars
-        uiUtils.focusSidebars()
+        this.$nextTick(()=>{
+          uiUtils.focusSidebars()
+        })
 
 
       })
@@ -1704,10 +1746,20 @@ export default {
       }
 
       if (this.searchValue.length<3){
-        // but do just init the search options since they are computed
-        // so they can display
-        this.modalSelectOptions
-        return false
+
+        // check the config, some vocabs have very short codes, like the marc geo
+        // so if it is configed to allow short search overtide the < 3 rule
+        let minCharBeforeSearch = 3
+        this.modalSelectOptions.forEach((a)=>{
+          if (a.minCharBeforeSearch && a.minCharBeforeSearch < minCharBeforeSearch){
+            minCharBeforeSearch = a.minCharBeforeSearch
+          }
+        })
+
+        if (this.searchValue.length<minCharBeforeSearch){
+          return false
+        }
+
       }
       window.clearTimeout(this.searchTimeout)
 

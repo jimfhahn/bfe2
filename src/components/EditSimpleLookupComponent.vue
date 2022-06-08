@@ -1,7 +1,6 @@
 <template>
   <div v-if="nested == false" :class="'component-container' + ' component-container-' + settingsDisplayMode">
 
-
     <div :class="'component-container-title' + ' component-container-title-' + settingsDisplayMode ">{{structure.propertyLabel}}</div>
     <div :class="'component-container-input-container' + ' component-container-input-container-' + settingsDisplayMode">
 
@@ -18,10 +17,10 @@
             <div style=" display: flex; height: 100%">
             <!-- <input autocomplete="off" v-bind:value="activeSelect"  type="text" disabled style="width: 95%; border:none; height: 90%; font-size: 1.5em; padding: 0.1em; position: relative; background: none; color: lightgray"> -->
               
-              <div v-for="(avl,idx) in activeLookupValue" :key="idx" class="selected-value-container">
+              <div v-for="(avl,idx) in activeLookupValue" ref="added-value" :key="idx" class="selected-value-container">
                   
-                  <span v-if="!avl['http://www.w3.org/2000/01/rdf-schema#label'].startsWith('http')" style="padding-right: 0.3em; font-weight: bold">{{avl['http://www.w3.org/2000/01/rdf-schema#label']}}<span class="uncontrolled" v-if="!avl.uri">(uncontrolled)</span></span>
-                  <span v-else style="padding-right: 0.3em; font-weight: bold"><EditLabelDereference :URI="avl['http://www.w3.org/2000/01/rdf-schema#label']"/></span>
+                  <span v-if="!avl['http://www.w3.org/2000/01/rdf-schema#label'].startsWith('http')" style="padding-right: 0.3em; font-weight: bold">{{avl['http://www.w3.org/2000/01/rdf-schema#label']}}<span class="uncontrolled" v-if="!avl.uri">(uncontrolled)</span><span v-if="avl.uri" title="Controlled Term" class="selected-value-icon" style="margin-left: 5px; border-left: 1px solid black; padding: 0px 5px; font-size: 1em;"></span></span>
+                  <span v-else style="padding-right: 0.3em; font-weight: bold"><EditLabelDereference :URI="avl['http://www.w3.org/2000/01/rdf-schema#label']"/><span v-if="avl.uri" title="Controlled Term" class="selected-value-icon" style="margin-left: 5px; border-left: 1px solid black; padding: 0px 5px; font-size: 1em;"></span></span>
 
                   <span @click="removeValue(idx)" style="border-left: solid 1px black; padding: 0 0.5em; font-size: 1em; cursor: pointer;">x</span>
               </div>
@@ -45,8 +44,6 @@
 
 
   <div v-else style="position: relative;">
-
-
       <div  v-bind:class="['component-container-fake-input no-upper-right-border-radius no-lower-right-border-radius no-upper-border temp-icon-search']" :style="{'background-color': (structure.dynamic) ? 'auto' : 'auto' }">          
         <form autocomplete="off" v-on:submit.prevent style="">
           <div style="">
@@ -60,12 +57,12 @@
 
 
             <div style="display: flex">
-              <div v-for="(avl,idx) in activeLookupValue" :key="idx" class="selected-value-container-nested">
+              <div v-for="(avl,idx) in activeLookupValue" ref="added-value" :key="idx" class="selected-value-container-nested">
                   
 
 
-                  <span v-if="!avl['http://www.w3.org/2000/01/rdf-schema#label'].startsWith('http')" style="padding-right: 0.3em; font-weight: bold">{{avl['http://www.w3.org/2000/01/rdf-schema#label']}}<span class="uncontrolled" v-if="!avl.uri">(uncontrolled)</span></span>
-                  <span v-else style="padding-right: 0.3em; font-weight: bold"><EditLabelDereference :URI="avl['http://www.w3.org/2000/01/rdf-schema#label']"/></span>
+                  <span v-if="!avl['http://www.w3.org/2000/01/rdf-schema#label'].startsWith('http')" style="padding-right: 0.3em; font-weight: bold">{{avl['http://www.w3.org/2000/01/rdf-schema#label']}}<span class="uncontrolled" v-if="!avl.uri">(uncontrolled)</span><span v-if="avl.uri" title="Controlled Term" class="selected-value-icon" style="margin-left: 5px; border-left: 1px solid black; padding: 0px 5px; font-size: 1em;"></span></span>
+                  <span v-else style="padding-right: 0.3em; font-weight: bold"><EditLabelDereference :URI="avl['http://www.w3.org/2000/01/rdf-schema#label']"/><span v-if="avl.uri" title="Controlled Term" class="selected-value-icon" style="margin-left: 5px; border-left: 1px solid black; padding: 0px 5px; font-size: 1em;"></span></span>
 
 
                   <span @click="removeValue(idx)" style="border-left: solid 1px black; padding: 0 0.5em; font-size: 1em; cursor: pointer;">x</span>
@@ -138,7 +135,8 @@ export default {
       activeSelect: '',
       activeValue: '',
       doubleDelete: false,
-      activeLookupValue: []
+      activeLookupValue: [],
+      debounceTimeout: null,
 
 
     }
@@ -523,6 +521,7 @@ export default {
 
 
 
+
       this.$store.dispatch("removeValueSimple", { self: this, idGuid: toRemove.uriGuid, labelGuid: toRemove.labelGuid }).then(() => {
        
       })  
@@ -539,21 +538,27 @@ export default {
 
     // Takes the list of values from this lookup uri and filters it based on the input
   
-    filter: function(){
+    filter: async function(recursive){
 
       this.displayList = []
       this.activeSelect = ''
+      this.activeKeyword = false
+      console.log("this.activeFilter",this.activeFilter)
+      
+      let addKeyword = ''
+      if (recursive){
+        addKeyword = 'KEYWORD'
+        this.activeKeyword = true
+      }
 
-
-
-      Object.keys(this.lookupLibrary[this.uri]).forEach((v)=>{
-
+      Object.keys(this.lookupLibrary[this.uri+addKeyword]).forEach((v)=>{
+        
         // the list has a special key metdata that contains more info
         if (v==='metadata'){return false}
 
         // no filter yet show first 25
         if (this.activeFilter.trim()===''){
-          this.lookupLibrary[this.uri][v].forEach((x)=>{
+          this.lookupLibrary[this.uri+addKeyword][v].forEach((x)=>{
             // if (this.displayList.length<=25){
               if (this.displayList.indexOf(x)==-1){
                 this.displayList.push(x)  
@@ -563,7 +568,7 @@ export default {
         }else{
 
           // loop through each one, each is a array, so each element of array
-          this.lookupLibrary[this.uri][v].forEach((x)=>{
+          this.lookupLibrary[this.uri+addKeyword][v].forEach((x)=>{
             
             // simple includes value check
             if (x.toLowerCase().startsWith(this.activeFilter.toLowerCase())){
@@ -597,7 +602,53 @@ export default {
         this.displayAutocomplete = true
       }
       if (this.displayList.length==0){
-        this.displayList.push('No Match - Press [Enter] to add uncontrolled value')
+        
+
+        if (!recursive){
+
+
+
+          if (this.uri.includes('id.loc.gov/vocabulary/')){
+
+            if (this.activeFilter.length>3){
+
+              this.displayList.push('Searching...')
+
+              window.clearTimeout(this.debounceTimeout)
+              this.debounceTimeout = window.setTimeout(()=>{
+
+
+
+                // kick off antoher search, then do the filter again
+                this.$store.dispatch("fetchLookupValues", { self: this, url: this.structure.valueConstraint.useValuesFrom, keyword: this.activeFilter }).then(() => {
+                  
+                  this.filter(true)
+
+                })
+
+
+              },500)
+
+              
+
+            }else{
+
+              this.displayList.push('No local match, enter more of the search term')
+            }
+
+
+            // store the current value
+            // let startOfSearchVal = this.activeFilter
+            
+          }
+
+        }else{
+
+          this.displayList.push('No Match - Press [Enter] to add uncontrolled value')
+        }
+        
+
+        
         this.displayAutocomplete = true
       }
       if (this.activeFilter.length==0){
@@ -619,7 +670,9 @@ export default {
       this.$store.dispatch("setActiveInput", { self: this, id: event.target.id, profileCompoent: this.profileCompoent, profileName: this.profileName }).then(()=>{
 
         // now focus the side bars
-        uiUtils.focusSidebars()
+        this.$nextTick(()=>{
+          uiUtils.focusSidebars()
+        })
 
 
       })
@@ -652,6 +705,15 @@ export default {
         //   return false
         // }
 
+        if (!this.nested && this.activeLookupValue.length>0){
+          this.$refs['added-value'][0].classList.add('ani-shake');
+          window.setTimeout(()=>{this.$refs['added-value'][0].classList.remove('ani-shake');},500)
+          event.target.value = ""
+          return false
+        }
+
+
+
 
 
         this.activeValue = event.target.value.trimStart()
@@ -665,15 +727,45 @@ export default {
 
 
 
+      }else if (event && event.key && event.key==='Backspace'){
+
+
+        if (!this.doubleDelete && this.activeValue === ''){
+          this.doubleDelete = true          
+          return false
+        }
+
+        if (this.activeValue == '' && this.doubleDelete){
+          this.doubleDelete = false
+          // were gonna delete the last one          
+          if (this.activeLookupValue.length>0){                       
+            this.removeValue(-1)
+          }
+          
+          this.doubleDelete = false
+          this.displayAutocomplete = false
+        }else if (this.activeValue == ''){
+          this.activeValue
+        }
+
+
+
+        this.doubleDelete = false
+        this.activeValue = event.target.value.trimStart()
+        this.activeFilter = event.target.value.trimStart()
+
+        this.displayAutocomplete = true
+        this.$store.dispatch("disableMacroNav")
+        this.filter()
+
       }
-
-
 
 
 
     },    
     keyDownEvent: function(event){
       
+
 
       this.activeValue = event.target.value
 
@@ -727,54 +819,41 @@ export default {
         this.activeValue = ''
         this.displayAutocomplete = false
       
-      }else if (event && event.key && event.key==='Backspace'){
 
-        if (!this.doubleDelete && this.activeValue === ''){
-          this.doubleDelete = true
-          return false
-        }
-
-        if (this.activeValue == '' && this.doubleDelete){
-          this.doubleDelete = false
-          // were gonna delete the last one          
-          if (this.activeLookupValue.length>0){                       
-            this.removeValue(-1)
-          }
-          
-          this.doubleDelete = false
-          this.displayAutocomplete = false
-        }else if (this.activeValue == ''){
-          this.activeValue
-        }
 
       }else if (event && event.key && event.key==='Enter'){
         this.doubleDelete = false
 
         let metadata = this.lookupLibrary[this.uri].metadata.values
 
+        if (this.activeKeyword){
+          metadata = this.lookupLibrary[this.uri+'KEYWORD'].metadata.values          
+        }
+
+
+
         // find the active selected in the data
         Object.keys(metadata).forEach((key)=>{
-
           let idx = metadata[key].displayLabel.indexOf(this.activeSelect)
+          // a dumb bug here where depending on the vocab the label has extra spaces in it....
+          if (idx==-1){
+            idx = metadata[key].displayLabel.indexOf(this.activeSelect.replace(/\s+/g,' '))
+          }
+
+
           if (idx >-1){
             // this.activeLookupValue.push({'http://www.w3.org/2000/01/rdf-schema#label':metadata[key].label[idx],URI:metadata[key].uri})
             this.activeFilter = ''
             this.activeValue = ''
             this.activeSelect = ''
             this.displayAutocomplete=false
-            event.target.value = ''
-            // this.$store.dispatch("addValueLiteral", { self: this, profileComponet: this.profileCompoent, structure: this.structure, template:this.activeTemplate, value:this.activeLookupValue }).then(() => {
-             
-            // })               
+            event.target.value = ''     
             let parentURI = (this.parentStructureObj) ? this.parentStructureObj.propertyURI : null 
+            let useLabel = (metadata[key].authLabel) ? metadata[key].authLabel : metadata[key].label[idx]
 
-
-            this.$store.dispatch("setValueSimple", { self: this, ptGuid: this.ptGuid, parentURI: parentURI, URI: this.structure.propertyURI, valueURI: metadata[key].uri, valueLabel:metadata[key].label[idx]}).then((resultData) => {
-
+            this.$store.dispatch("setValueSimple", { self: this, ptGuid: this.ptGuid, parentURI: parentURI, URI: this.structure.propertyURI, valueURI: metadata[key].uri, valueLabel:useLabel}).then((resultData) => {
               this.activeLookupValue.push({'http://www.w3.org/2000/01/rdf-schema#label':resultData.valueLabel, uri: resultData.valueURI, uriGuid: resultData.guid, labelGuid:resultData.guid})
             })
-
-
           }
           // let data = this.lookupLibrary[this.uri].metadata[v]
           
@@ -853,55 +932,91 @@ export default {
 
       this.displayAutocomplete=false
 
-      let label = this.displayList[event.target.dataset.idx]
+
+      if (event && event.target && event.target.innerText){
+        this.activeSelect = event.target.innerText
+      }
 
       let metadata = this.lookupLibrary[this.uri].metadata.values
 
+      if (this.activeKeyword){
+        metadata = this.lookupLibrary[this.uri+'KEYWORD'].metadata.values          
+      }
       // find the active selected in the data
       Object.keys(metadata).forEach((key)=>{
-
-        let idx = metadata[key].displayLabel.indexOf(label)
+        let idx = metadata[key].displayLabel.indexOf(this.activeSelect)
         if (idx >-1){
-          // this.activeLookupValue.push({'http://www.w3.org/2000/01/rdf-schema#label':,URI:})
-          // this.activeFilter = ''
-          // this.activeValue = ''
-          // this.activeSelect = ''
-          // this.displayAutocomplete=false
-          // // this.$store.dispatch("addValueLiteral", { self: this, profileComponet: this.profileCompoent, structure: this.structure, template:this.activeTemplate, value:this.activeLookupValue }).then(() => {
-           
-          // // })        
-
-          // this.$store.dispatch("setValueSimple", { self: this, ptGuid: this.ptGuid, parentURI: this.parentStructureObj.propertyURI, URI: this.structure.propertyURI, valueURI: metadata[key].uri, valueLabel:metadata[key].label[idx]}).then((resultData) => {
-          //   this.activeLookupValue.push({'http://www.w3.org/2000/01/rdf-schema#label':resultData.valueLabel, uri: resultData.valueURI, uriGuid: resultData.guid, labelGuid:resultData.guid})
-          // })
-
-
-
+          // this.activeLookupValue.push({'http://www.w3.org/2000/01/rdf-schema#label':metadata[key].label[idx],URI:metadata[key].uri})
           this.activeFilter = ''
           this.activeValue = ''
           this.activeSelect = ''
           this.displayAutocomplete=false
-          event.target.value = ''
-          // this.$store.dispatch("addValueLiteral", { self: this, profileComponet: this.profileCompoent, structure: this.structure, template:this.activeTemplate, value:this.activeLookupValue }).then(() => {
-           
-          // })               
+          event.target.value = ''     
           let parentURI = (this.parentStructureObj) ? this.parentStructureObj.propertyURI : null 
+          let useLabel = (metadata[key].authLabel) ? metadata[key].authLabel : metadata[key].label[idx]
 
-
-          this.$store.dispatch("setValueSimple", { self: this, ptGuid: this.ptGuid, parentURI: parentURI, URI: this.structure.propertyURI, valueURI: metadata[key].uri, valueLabel:metadata[key].label[idx]}).then((resultData) => {
+          this.$store.dispatch("setValueSimple", { self: this, ptGuid: this.ptGuid, parentURI: parentURI, URI: this.structure.propertyURI, valueURI: metadata[key].uri, valueLabel:useLabel}).then((resultData) => {
             this.activeLookupValue.push({'http://www.w3.org/2000/01/rdf-schema#label':resultData.valueLabel, uri: resultData.valueURI, uriGuid: resultData.guid, labelGuid:resultData.guid})
           })
-
-
-
-          this.$store.dispatch("enableMacroNav")    
-
-
-
         }
-
-
+        // let data = this.lookupLibrary[this.uri].metadata[v]
+        
+        // let idx = data.defaultsisplayLabel.indexOf(this.activeSelect)
+        // if (idx > -1){
+        //   this.structure.valueConstraint.defaults.push({defaultLiteral:data.label[idx],defaultURI:data.uri[idx]})
+        // }
       })
+
+
+      // let label = this.displayList[event.target.dataset.idx]
+
+      // let metadata = this.lookupLibrary[this.uri].metadata.values
+
+      // // find the active selected in the data
+      // Object.keys(metadata).forEach((key)=>{
+
+      //   let idx = metadata[key].displayLabel.indexOf(label)
+      //   if (idx >-1){
+      //     // this.activeLookupValue.push({'http://www.w3.org/2000/01/rdf-schema#label':,URI:})
+      //     // this.activeFilter = ''
+      //     // this.activeValue = ''
+      //     // this.activeSelect = ''
+      //     // this.displayAutocomplete=false
+      //     // // this.$store.dispatch("addValueLiteral", { self: this, profileComponet: this.profileCompoent, structure: this.structure, template:this.activeTemplate, value:this.activeLookupValue }).then(() => {
+           
+      //     // // })        
+
+      //     // this.$store.dispatch("setValueSimple", { self: this, ptGuid: this.ptGuid, parentURI: this.parentStructureObj.propertyURI, URI: this.structure.propertyURI, valueURI: metadata[key].uri, valueLabel:metadata[key].label[idx]}).then((resultData) => {
+      //     //   this.activeLookupValue.push({'http://www.w3.org/2000/01/rdf-schema#label':resultData.valueLabel, uri: resultData.valueURI, uriGuid: resultData.guid, labelGuid:resultData.guid})
+      //     // })
+
+
+
+      //     this.activeFilter = ''
+      //     this.activeValue = ''
+      //     this.activeSelect = ''
+      //     this.displayAutocomplete=false
+      //     event.target.value = ''
+      //     // this.$store.dispatch("addValueLiteral", { self: this, profileComponet: this.profileCompoent, structure: this.structure, template:this.activeTemplate, value:this.activeLookupValue }).then(() => {
+           
+      //     // })               
+      //     let parentURI = (this.parentStructureObj) ? this.parentStructureObj.propertyURI : null 
+
+
+      //     this.$store.dispatch("setValueSimple", { self: this, ptGuid: this.ptGuid, parentURI: parentURI, URI: this.structure.propertyURI, valueURI: metadata[key].uri, valueLabel:metadata[key].label[idx]}).then((resultData) => {
+      //       this.activeLookupValue.push({'http://www.w3.org/2000/01/rdf-schema#label':resultData.valueLabel, uri: resultData.valueURI, uriGuid: resultData.guid, labelGuid:resultData.guid})
+      //     })
+
+
+
+      //     this.$store.dispatch("enableMacroNav")    
+
+
+
+      //   }
+
+
+      // })
 
       // refocus
       this.$refs.lookupInput.focus()
@@ -976,6 +1091,8 @@ input{
   background-color: whitesmoke;
   white-space: nowrap;
 
+
+
 }
 .selected-value-container-nested{
   margin: 0.25em;
@@ -1020,4 +1137,43 @@ a {
 form{
   height: 100%;
 }
+
+.ani-shake{
+  animation: shake 1s 1;
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  10%,
+  30%,
+  50%,
+  70% {
+    transform: translateX(-10px);
+  }
+
+  20%,
+  40%,
+  60% {
+    transform: translateX(10px);
+  }
+
+  80% {
+    transform: translateX(8px);
+  }
+
+  90% {
+    transform: translateX(-8px);
+  }
+}
+
+.selected-value-icon{
+  font-family: "validation-icons", "fontello", Avenir, Helvetica, Arial, sans-serif;
+  padding-right: 0.3em;
+}
+
+
 </style>

@@ -2,6 +2,7 @@
   
   <div tabindex="-1" @click="displayModeClick($event)" @keydown="displayModeElementKeydown($event)"  :class="['resource-grid-field-list-navable', `resource-${resourceIdx}`]" :id="`navable-${resourceIdx}-1-${rowIdx}-${componentIdx}`" v-if="hideField == false">
     <Keypress key-event="keydown" :multiple-keys="[{keyCode: 68, modifiers: ['shiftKey','ctrlKey','altKey'],preventDefault: false}]" @success="openDiacriticSelect" />
+    <Keypress key-event="keydown" :multiple-keys="[{keyCode: 90, modifiers: ['shiftKey','ctrlKey','altKey'],preventDefault: true}]" @success="addAnotherLiteral" />
 
 
 
@@ -10,7 +11,7 @@
         <div style="position: relative;">
           <div style="">
             <form autocomplete="off">            
-              <input :placeholder="structure.propertyLabel" @blur="literalBlur() "  bfeType="EditLiteralComponent-unnested" :id="assignedId" v-on:keydown.enter.prevent="submitField" :name="assignedId" :ref="'input'+ '_' + inputV.guid" v-on:focus="focused" autocomplete="off" type="text" @keydown="nav" @keyup="change($event,inputV)" v-model="inputV.value"  :class="['input-single', {'selectable-input': (isMini==false), 'selectable-input-mini':(isMini==true), 'input-accommodate-diacritics': (containsNonLatinCodepoints(inputV.value))}]">            
+              <input :placeholder="structure.propertyLabel" @blur="literalBlur($event) "  bfeType="EditLiteralComponent-unnested" :id="assignedId" v-on:keydown.enter.prevent="submitField" :name="assignedId" :ref="'input'+ '_' + inputV.guid" v-on:focus="focused" autocomplete="off" type="text" @keydown="nav" @keyup="change($event,inputV)" v-model="inputV.value"  :class="['input-single', {'selectable-input': (isMini==false), 'selectable-input-mini':(isMini==true), 'input-accommodate-diacritics': (containsNonLatinCodepoints(inputV.value))}]">            
             </form>
           </div>
           <button tabindex="-1" class="temp-icon-keyboard fake-real-button simptip-position-top" :data-tooltip="'Diacritics [CTRL-ALT-D]'" @click="openDiacriticSelect"></button>
@@ -90,6 +91,13 @@ export default {
   },
 
   methods: {
+
+
+    addAnotherLiteral: function(){
+
+      this.inputValue.push({value:'',guid:'new_' + short.generate()})
+    },
+
 
     refreshInputDisplay: function(){
 
@@ -244,13 +252,24 @@ export default {
       }
 
 
+      for (let inputV of this.inputValue){
 
+        // and also clean up any escape chars here
+        inputV.value= inputV.value.replace(/&amp;/g, '&');
+        
+
+      }
 
 
 
     },
 
     literalBlur: function(){
+
+      // quick fix, if they are clicking into the other literal field don't blur
+      if (this.inputValue.length>1){
+        return false
+      }
 
       this.editMode=false
       this.$store.dispatch("enableMacroNav")
@@ -757,9 +776,9 @@ export default {
         return false
       }
 
-      // if (inputV.value == this.inputValueLast){
-      //   return false
-      // }
+      if (inputV.value == this.inputValueLast){
+        return false
+      }
 
 
       // this resizes the textarea as there is more content
@@ -770,14 +789,13 @@ export default {
 
 
       if (inputV.value === null) return false
-      if (inputV.value.trim() === '') return false
+      if (inputV.value.trim() === '' && (this.inputValueLast === '' || this.inputValueLast === null)) return false
 
       let parentURI = null
       if (this.parentStructureObj){
         parentURI = this.parentStructureObj.propertyURI
       }
 
-      console.log(this.inputValue)
       let useGuid = inputV.guid
       if (inputV.guid.startsWith('new_')){
         useGuid = null
@@ -787,7 +805,7 @@ export default {
       this.$store.dispatch("setValueLiteral", { self: this, ptGuid: this.ptGuid, guid: useGuid, parentURI:parentURI, URI: this.structure.propertyURI, value: inputV.value }).then((newGuid) => {
         
 
-        // this.inputValueLast = this.inputValue
+        this.inputValueLast = this.inputValue
         // if this is here then we created a new value, store it for future edits
         if(newGuid){
           inputV.guid = newGuid
@@ -823,202 +841,6 @@ export default {
       })   
 
 
-
-      // if (!this.inputValueOrginal){
-      //   this.inputValueOrginal = this.inputValue
-      // }
-
-      // if (diacrticsVoyagerMacroExpress[event.code] && this.settingsDPackVoyager){
-
-
-      //   for (let macro of diacrticsVoyagerMacroExpress[event.code]){
-
-      //     if (event.ctrlKey == macro.ctrlKey && event.altKey == macro.altKey && event.shiftKey == macro.shiftKey){
-
-      //       event.preventDefault();
-
-      //       console.log(this.$refs["input"])
-
-
-      //       this.$refs["input"].style.color="blue"
-      //       window.setTimeout(()=>{
-      //         this.$refs["input"].style.color="black"
-      //       },500)
-
-      //       if (!macro.combining){
-
-      //         // there is behavior where if it is a digit shortcut the numerial is still sent
-      //         // so if thats the case remove the last digit from the value
-      //         if (event.code.includes('Digit')){
-      //           // if it is in fact a digit char then remove it
-      //           if (this.inputValue.charAt(this.inputValue.length-1) == event.code.replace('Digit','')){
-      //             // remove the last char
-      //             this.inputValue = this.inputValue.slice(0, -1); 
-      //           }
-      //         }
-
-      //         // same for euqal key
-      //         if (event.code == 'Equal'){
-      //           if (this.inputValue.charAt(this.inputValue.length-1) == '='){
-      //             // remove the last char
-      //             this.inputValue = this.inputValue.slice(0, -1); 
-      //           }
-      //         }
-      //         // same for Backquote key
-      //         console.log('event.code',event.code)
-      //         if (event.code == 'Backquote'){
-      //           console.log('this.inputValue',this.inputValue)
-      //           if (this.inputValue.charAt(this.inputValue.length-1) == '`'){
-      //             // remove the last char
-      //             this.inputValue = this.inputValue.slice(0, -1); 
-      //           }
-
-      //         }
-
-
-      //         // it is not a combining unicode char so just insert it into the value
-      //         if (this.inputValue){
-      //           this.inputValue=this.inputValue+macro.codeEscape
-      //         }else{
-      //           this.inputValue = macro.codeEscape
-      //         }
-              
-      //       }else{
-
-
-      //         // same for Backquote key
-      //         console.log('event.code',event.code)
-      //         if (event.code == 'Backquote'){
-      //           console.log('this.inputValue',this.inputValue)
-      //           if (this.inputValue.charAt(this.inputValue.length-1) == '`'){
-      //             // remove the last char
-      //             this.inputValue = this.inputValue.slice(0, -1); 
-      //           }
-
-      //         }
-
-
-      //         // little cheap hack here, on macos the Alt+9 makes ª digits 1-0 do this with Alt+## but we only 
-      //         // have one short cut that uses Alt+9 so just remove that char for now
-      //         this.inputValue=this.inputValue.replace('ª','')
-      //         this.inputValue=this.inputValue+macro.codeEscape
-    
-
-
-      //       }
-
-
-      //     }
-
-      //   }
-
-
-      // }
-
-      // // handled in the keydown
-      // if (this.settingsDPackVoyagerNative && this.diacrticsVoyagerNativeMode == false && event.code == 'KeyE' && event.ctrlKey == true){
-      //   event.preventDefault()
-      //   return false
-      // // turn it off
-      // }else if (this.settingsDPackVoyagerNative && this.diacrticsVoyagerNativeMode == true && event.code == 'KeyE' && event.ctrlKey == true){
-      //   event.preventDefault()
-      //   return false
-      // // execute it
-      // }else if (this.settingsDPackVoyagerNative && diacrticsVoyagerNative[event.code] && this.diacrticsVoyagerNativeMode == true){
-
-      //   window.setTimeout(()=>{
-      //     this.$refs["input"].style.color="black"
-      //   },500)
-
-      //   // remove the shortcut key we just dumped into the text box
-      //   this.inputValue = this.inputValue.slice(0, -1); 
-
-      //   this.diacrticsVoyagerNativeMode = false
-        
-      //   let useMacro
-      //   for (let macro of diacrticsVoyagerNative[event.code]){          
-      //     if (macro.shiftKey == event.shiftKey){
-      //       useMacro = macro
-      //       break
-      //     }
-      //   }
-
-
-      //   if (!useMacro.combining){
-      //     // it is not a combining unicode char so just insert it into the value
-      //     if (this.inputValue){
-      //       this.inputValue=this.inputValue+useMacro.codeEscape
-      //     }else{
-      //       this.inputValue = useMacro.codeEscape
-      //     }
-
-      //   }else{
-      //         this.inputValue=this.inputValue+useMacro.codeEscape
-
-      //   }
-
-      // }
-
-
-
-
-      // // }
-
-
-
-
-
-      // // if (event.ctrlKey && event.altKey && event.code == 'KeyH'){
-      // //   console.log('~~~~~~~~~~~~~~~~~~~~')
-      // //   console.log(event)
-
-      // //   this.inputValue=this.inputValue+'a\u0328'
-      // // }
-
-
-
-      // // don't update if nothing changed or havent entered anythign yet...
-      // if (this.inputValue == null){
-      //   return false
-      // }
-
-      // if (this.inputValue == this.inputValueLast){
-      //   return false
-      // }
-
-
-      // // this resizes the textarea as there is more content
-      // if (event.target && event.target.localName && event.target.localName == 'textarea'){
-      //   event.target.style.height = ""
-      //   event.target.style.height = event.target.scrollHeight + "px"
-      // }
-
-
-      // // if (this.inputValue === null) return false
-      // // if (this.inputValue.trim() === '') return false
-
-      // let parentURI = null
-      // if (this.parentStructureObj){
-      //   parentURI = this.parentStructureObj.propertyURI
-      // }
-
-
-      // this.$store.dispatch("setValueLiteral", { self: this, ptGuid: this.ptGuid, guid: this.guid, parentURI:parentURI, URI: this.structure.propertyURI, value: this.inputValue }).then((newGuid) => {
-       
-      //   this.inputValueLast = this.inputValue
-      //   // if this is here then we created a new value, store it for future edits
-      //   if(newGuid){
-      //     this.guid = newGuid
-      //   }
-
-      //   // but if it is explictly set to false that means we just unset the value, so reset the guid here
-      //   if (newGuid===false){
-      //     this.guid = null
-      //   }
-
-
-
-      // })   
 
 
     }
@@ -1098,6 +920,8 @@ export default {
       this.diacriticData = JSON.parse(d)
     }
 
+
+    this.inputValueLast = this.inputValue
 
 
   },

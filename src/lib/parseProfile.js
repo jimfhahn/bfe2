@@ -29,6 +29,7 @@ const parseProfile = {
     // fetches the profile data from supplied URL or from the config URL if empty
     fetchProfiles: async function(url) {
       url = url || config.returnUrls().profiles
+      
       try{
         let response = await fetch(url);
         let data =  await response.json()
@@ -66,7 +67,7 @@ const parseProfile = {
         this.profileSource = await this.fetchProfiles()
         this.startingPointData = await this.fetchStartingPoints()
 
-        console.log(this.startingPointData)
+        
         // TEMP HACK ADD IN HUBS
         if (this.startingPointData[0]){
             this.startingPointData[0].json.push(
@@ -108,7 +109,7 @@ const parseProfile = {
 
 
 
-        console.log('this.startingPointData',this.startingPointData)
+        
 
         // TEMP HACK, striping RDA fields for some things for the new editor
         for (let p of this.profileSource){
@@ -228,6 +229,64 @@ const parseProfile = {
 
                 }   
 
+                if (rt.id == 'lc:RT:bf2:GPORelWorkBrief'){                    
+                    rt.propertyTemplates = [
+                            {
+                                "mandatory": "false",
+                                "propertyLabel": "Lookup",
+                                "propertyURI": "http://id.loc.gov/ontologies/bibframe/Work",
+                                "repeatable": "true",
+                                "resourceTemplates": [],
+                                "type": "lookup",
+                                "valueConstraint": {
+                                    "defaults": [],
+                                    "useValuesFrom": [
+                                        "https://preprod-8295.id.loc.gov/resources/works"
+                                    ],
+                                    "valueDataType": {
+                                        "dataTypeURI": ""
+                                    },
+                                    "valueTemplateRefs": []
+                                }
+                            }]
+
+                } 
+
+
+
+
+
+
+
+                if (rt.id == 'lc:RT:bf2:Brief:Instance'){                    
+                    rt.propertyTemplates = [
+                            {
+                                "mandatory": "false",
+                                "propertyLabel": "Lookup",
+                                "propertyURI": "http://id.loc.gov/ontologies/bibframe/Instance",
+                                "repeatable": "true",
+                                "resourceTemplates": [],
+                                "type": "lookup",
+                                "valueConstraint": {
+                                    "defaults": [],
+                                    "useValuesFrom": [
+                                        "https://preprod-8230.id.loc.gov/resources/instances"
+                                    ],
+                                    "valueDataType": {
+                                        "dataTypeURI": ""
+                                    },
+                                    "valueTemplateRefs": []
+                                }
+                            }]
+
+                }   
+
+
+
+
+
+
+
 
 
                 // if (rt.id.includes(':Work')){
@@ -339,9 +398,10 @@ const parseProfile = {
 
         // -------- end HACKKCKCKCKCK
 
-
+        
         this.profileSource.forEach((p)=>{
 
+            
             // build the first level profiles
             if (p.json && p.json.Profile){
                 // for example monograph -> work
@@ -365,6 +425,9 @@ const parseProfile = {
                                 pt['@guid'] = short.generate()
                                 pt.canBeHidden = false
                                 
+                                if (pt.type === 'literal-lang'){
+                                    this.profiles[p.json.Profile.id].rt[rt.id].hasLiteralLangFields = true
+                                }
 
                                 let key = pt.propertyURI + '|' + ((pt.propertyLabel) ? pt.propertyLabel : "plabel")
                                 this.profiles[p.json.Profile.id].rt[rt.id].ptOrder.push(key)
@@ -402,6 +465,60 @@ const parseProfile = {
         if (Array.isArray(this.startingPointData)){
             this.startingPointData = this.startingPointData[0]
         }
+
+        
+
+        // HACKHACKHACKHACK
+        if (config.returnUrls().env != 'production'){
+            this.startingPointData.json.splice(2,0,{
+                "menuGroup": "GPO Monograph",
+                "menuItems": [
+                    {
+                        "label": "Instance",
+                        "type": [
+                            "http://id.loc.gov/ontologies/bibframe/Instance"
+                        ],
+                        "useResourceTemplates": [
+                            "lc:RT:bf2:GPOMono:Instance"
+                        ]
+                    },
+                    {
+                        "label": "Work",
+                        "type": [
+                            "http://id.loc.gov/ontologies/bibframe/Work"
+                        ],
+                        "useResourceTemplates": [
+                            "lc:RT:bf2:GPOMono:Work"
+                        ]
+                    }
+                ]
+            })
+            this.startingPointData.json.splice(3,0,{
+                "menuGroup": "GPO Serial",
+                "menuItems": [
+                    {
+                        "label": "Instance",
+                        "type": [
+                            "http://id.loc.gov/ontologies/bibframe/Instance"
+                        ],
+                        "useResourceTemplates": [
+                            "lc:RT:bf2:GPOSerial:Instance"
+                        ]
+                    },
+                    {
+                        "label": "Work",
+                        "type": [
+                            "http://id.loc.gov/ontologies/bibframe/Work"
+                        ],
+                        "useResourceTemplates": [
+                            "lc:RT:bf2:GPOSerial:Work"
+                        ]
+                    }
+                ]
+            })
+        }
+
+
         this.startingPointData.json.forEach((sp)=>{
 
             this.startingPoints[sp.menuGroup] = {name:sp.menuGroup, work: null, instance: null, item: null }
@@ -792,11 +909,15 @@ const parseProfile = {
 
         // just does a little yellow flash animation
         setTimeout(()=>{
-            document.getElementById(profile+'|'+newPropertyId).style.backgroundColor="yellow"    
-            document.getElementById(profile+'|'+newPropertyId).scrollIntoView({ behavior: 'smooth', block: 'center' })
-            setTimeout(()=>{
-                document.getElementById(profile+'|'+newPropertyId).style.removeProperty('background-color');       
-            },500)                    
+            if (document.getElementById(profile+'|'+newPropertyId)){
+                document.getElementById(profile+'|'+newPropertyId).style.backgroundColor="yellow"    
+                document.getElementById(profile+'|'+newPropertyId).scrollIntoView({ behavior: 'smooth', block: 'center' })
+                setTimeout(()=>{
+                    document.getElementById(profile+'|'+newPropertyId).style.removeProperty('background-color');       
+                },500)   
+                
+            }
+                 
         },0)
 
         
@@ -1011,7 +1132,13 @@ const parseProfile = {
 
             for (let pp of possibleProperties){
                 if (currentState.rt[activeProfileName].pt[component].refTemplateUserValue[pp]){
-                    currentState.rt[activeProfileName].pt[component].userValue[pp]= JSON.parse(JSON.stringify(currentState.rt[activeProfileName].pt[component].refTemplateUserValue[pp]))
+                    // don't use http://id.loc.gov/ontologies/bibframe/assigner aka source
+                    // kind of a hackish thing, but the source is really not transferable between
+                    // differnt types of classifications so leave it out, it will get populated with the default so
+                    // we shouldn't loose any data, only if they change it then cycle the options then it will be lost and need to re-add
+                    if (pp != 'http://id.loc.gov/ontologies/bibframe/assigner'){
+                        currentState.rt[activeProfileName].pt[component].userValue[pp]= JSON.parse(JSON.stringify(currentState.rt[activeProfileName].pt[component].refTemplateUserValue[pp]))
+                    }
                     delete currentState.rt[activeProfileName].pt[component].refTemplateUserValue[pp]
                 }
 
@@ -1099,12 +1226,17 @@ const parseProfile = {
 
     // eslint-disable-next-line
     removeValueSimple: function(currentState, idGuid, labelGuid){
+
+
+        // console.log('idGuid',idGuid)
+        // console.log('labelGuid',labelGuid)
         // find the pt for the value we are editing
         for (let rt in currentState.rt){
             for (let pt in currentState.rt[rt].pt){
 
 
                 let removed = false
+
 
                 // the root node is the lookup val, reset the uservale to remove
                 if (idGuid != null && currentState.rt[rt].pt[pt].userValue['@guid'] == idGuid){
@@ -1214,13 +1346,13 @@ const parseProfile = {
 
         let results = {newData:{}}
 
-        console.log("-------------Adding DATA---------------")
-        console.log('currentState',currentState)
-        console.log('ptGuid',ptGuid)
-        console.log('parentURI',parentURI)
-        console.log('URI',URI)
-        console.log('valueURI',valueURI)
-        console.log('valueLabel',valueLabel)
+        // console.log("-------------Adding DATA---------------")
+        // console.log('currentState',currentState)
+        // console.log('ptGuid',ptGuid)
+        // console.log('parentURI',parentURI)
+        // console.log('URI',URI)
+        // console.log('valueURI',valueURI)
+        // console.log('valueLabel',valueLabel)
 
 
         // find the pt for the value we are editing
@@ -1235,9 +1367,10 @@ const parseProfile = {
 
                     // top level
                     if (currentState.rt[rt].pt[pt].propertyURI == URI){
-                        console.log("--- top level")
+                        // console.log("--- top level")
                         //s
 
+                        let topLvlTmpGuid = short.generate()
                         let tmpGuid = short.generate()
                         
 
@@ -1256,6 +1389,7 @@ const parseProfile = {
                             }
                                                     
 
+                            userValue['@guid'] = topLvlTmpGuid
                             userValue['http://www.w3.org/2000/01/rdf-schema#label'].push(
 
                                 {
@@ -1275,7 +1409,7 @@ const parseProfile = {
 
 
                         
-                        results.newData = {'guid': tmpGuid, valueLabel: valueLabel, valueURI:valueURI }
+                        results.newData = {'guid': topLvlTmpGuid, valueLabel: valueLabel, valueURI:valueURI }
 
 
 
@@ -1286,12 +1420,10 @@ const parseProfile = {
                             userValue[URI] = []
                         }
 
-                        console.log("--- not top level")
+                        // console.log("--- not top level")
 
                         let newData = {'@guid': short.generate()}
-                        console.log(URI)
                         newData['@type'] = await exportXML.suggestType(URI)
-                        console.log(URI, newData['@type'])
                         if (valueLabel){
                             newData['http://www.w3.org/2000/01/rdf-schema#label'] = []
 
@@ -1326,6 +1458,7 @@ const parseProfile = {
                     // always make sure there is a type
                     if (!userValue['@type']){
                         userValue['@type'] = await exportXML.suggestType(currentState.rt[rt].pt[pt].propertyURI)
+                        
                     }
 
                 }
@@ -1354,7 +1487,7 @@ const parseProfile = {
 
 
         
-        console.log(currentState, ptGuid, guid, parentURI, URI, value)
+        // console.log(currentState, ptGuid, guid, parentURI, URI, value)
         // console.log('before:',JSON.parse(JSON.stringify(currentState)))
 
         // find the pt for the value we are editing
@@ -1411,10 +1544,10 @@ const parseProfile = {
                                 }
                             }else{
 
-                                console.log("here6")
+                                // console.log("here6")
                                 // just search using the propertyURI
                                 if (userValue[URI]){
-                                  console.log("here611")  
+                                  // console.log("here611")  
                                   for (let childValue of userValue[URI]){
                                     if (childValue['@guid'] == guid){
                                         childValue[URI] = value
@@ -1428,7 +1561,7 @@ const parseProfile = {
                                             }
 
                                             results.newGuid=false
-                                            console.log("here66")
+                                            // console.log("here66")
                                         }else if (!value){
                                             // value is null remove the property
                                             if (userValue[URI].length>1){
@@ -1439,7 +1572,7 @@ const parseProfile = {
 
 
                                             results.newGuid=false
-                                            console.log("here666")
+                                            // console.log("here666")
                                         }
 
                                     }
@@ -1614,7 +1747,7 @@ const parseProfile = {
     reorderSubjects: function(profile, subjects){
 
 
-        console.log(subjects)
+        
         for (let rt of profile.rtOrder){
 
             if (rt.includes(':Work')){
@@ -1631,12 +1764,9 @@ const parseProfile = {
 
                 let ptOrderNoSubjects = profile.rt[rt].ptOrder.filter((p)=>{ return (!p.includes('http://id.loc.gov/ontologies/bibframe/subject')) })
 
-                console.log('subjectsStartAtIndex',subjectsStartAtIndex)
-                console.log(ptOrderNoSubjects)
-
+                
+                
                 let subjectNewOrder = subjects.map((s)=>{return s.pt})
-
-                console.log(subjectNewOrder)
 
                 // add them in 
                 ptOrderNoSubjects.splice(subjectsStartAtIndex, 0, ...subjectNewOrder);
@@ -1660,7 +1790,7 @@ const parseProfile = {
                 for (let pt of profile.rt[rt].ptOrder){
 
                     if (pt.includes('id.loc.gov/ontologies/bibframe/subject')){
-                        console.log("SUBJECT!!!",profile.rt[rt].pt[pt])
+                        
 
                         let label = "!Unkown Subject Label!"
                         let source = ''
@@ -1767,7 +1897,7 @@ const parseProfile = {
                     "@guid": short.generate(),
                     "http://www.w3.org/2000/01/rdf-schema#label": subjectComponents[0].label
                 }]
-                console.log("Adding single")
+                
                 store.state.activeUndoLog.push(`Added subject heading ${subjectComponents[0].label}`)
 
 
@@ -1842,6 +1972,8 @@ const parseProfile = {
 
     setValueComplex: async function(currentState, component, key, activeProfileName, template, value, structure,parentStructure){
 
+            console.log("setvaluecomplex")
+            console.log(currentState, component, key, activeProfileName, template, value, structure,parentStructure)
             // if it is a top level Work uri don't let them change it
             if (!parentStructure && structure.propertyURI == 'http://id.loc.gov/ontologies/bibframe/Work'){
 
@@ -1853,14 +1985,17 @@ const parseProfile = {
             let relatedEdgecaseParentProperty = -1
 
             if (parentStructure){
-               relatedEdgecaseParentProperty = ['http://id.loc.gov/ontologies/bibframe/relatedTo','http://id.loc.gov/ontologies/bflc/relation'].indexOf(parentStructure.propertyURI)
+               relatedEdgecaseParentProperty = ['http://id.loc.gov/ontologies/bibframe/relatedTo','http://id.loc.gov/ontologies/bflc/relation','http://id.loc.gov/ontologies/bibframe/expressionOf'].indexOf(parentStructure.propertyURI)
             }
 
 
-
+            if (!activeProfileName){
+                console.warn('setValueComplex no activeProfileName')
+                return currentState
+            }
 
             // console.log('currentState, component, key, activeProfileName, template, value, structure,parentStructure')
-            console.log(currentState, component, key, activeProfileName, template, value, structure,parentStructure)
+            // console.log(currentState, component, key, activeProfileName, template, value, structure,parentStructure)
 
             // clearing a value works by clearing the context in the store,
             // if it is an empy object then the context was clered before 
@@ -1933,16 +2068,13 @@ const parseProfile = {
 
 
             
-            
-            
-            
             if (currentState.rt[activeProfileName].pt[component]){
                     
                 // console.log('>>>>',structure.type, parentStructure)
 
                 // need tofigure out what property to store this under the in the userValue
                 if (parentStructure && key == 'http://www.w3.org/2002/07/owl#sameAs' && currentState.rt[activeProfileName].pt[component].propertyURI != parentStructure.propertyURI){
-                    console.log('case 1')
+                    // console.log('case 1')
                     if (!currentState.rt[activeProfileName].pt[component].userValue[parentStructure.propertyURI]){
                         currentState.rt[activeProfileName].pt[component].userValue[parentStructure.propertyURI] = []
                     }
@@ -1953,6 +2085,20 @@ const parseProfile = {
 
                         // testing just making sure there is only one value in there
                         userValue = []
+
+                        if (!value.typeFull && value.type == "Literal Value"){
+
+                            if (structure && structure.propertyURI == "http://id.loc.gov/ontologies/bibframe/agent"){
+                                value.typeFull = 'http://id.loc.gov/ontologies/bibframe/Agent'
+                            }else if (parentStructure && parentStructure.propertyURI == "http://id.loc.gov/ontologies/bibframe/agent"){
+                                value.typeFull = 'http://id.loc.gov/ontologies/bibframe/Agent'
+                            }
+
+                            // if its looking up from an agent 
+
+                        }
+
+
 
                         userValue.push({
                             '@guid': short.generate(),
@@ -1966,6 +2112,7 @@ const parseProfile = {
                                 }
                             ]
                         })
+
 
                     }
 
@@ -1982,61 +2129,12 @@ const parseProfile = {
                         // just make sure it has a type
                         currentState.rt[activeProfileName].pt[component].userValue['@type'] = await exportXML.suggestType(currentState.rt[activeProfileName].pt[component].propertyURI)
 
-
                     }
 
 
 
-                    // // make sure we have the @type if this is ref template select component
-                    // console.log(currentState.rt[activeProfileName].pt[component].valueConstraint)
-                    // console.log(currentState.rt[activeProfileName].pt[component].valueConstraint.valueTemplateRefs)
-                    // console.log(currentState.rt[activeProfileName].pt[component].valueConstraint.valueTemplateRefs.length)
-
-                    // if (currentState.rt[activeProfileName].pt[component].valueConstraint && currentState.rt[activeProfileName].pt[component].valueConstraint.valueTemplateRefs && currentState.rt[activeProfileName].pt[component].valueConstraint.valueTemplateRefs.length > 1){
-                    //     console.log('here')
-                    //     if (!currentState.rt[activeProfileName].pt[component].activeType){
-                    //        currentState.rt[activeProfileName].pt[component].activeType =  this.rtLookup[currentState.rt[activeProfileName].pt[component].valueConstraint.valueTemplateRefs[0]].resourceURI
-                    //     }
-                    //     currentState.rt[activeProfileName].pt[component].userValue['@type'] = currentState.rt[activeProfileName].pt[component].activeType
-                    // }
-
-
-                    // console.log(structure)
-                    // console.log(structure.valueConstraint)
-                    // console.log(structure.valueConstraint.valueTemplateRefs)
-                    // console.log(structure.valueConstraint.valueTemplateRefs.length)
-
-                    // // also check at the current level if it is a ref template
-                    // if (structure.valueConstraint && structure.valueConstraint.valueTemplateRefs && structure.valueConstraint.valueTemplateRefs.length > 1){
-                    //     console.log('here')
-                    //     if (!currentState.rt[activeProfileName].pt[component].activeType){
-                    //        currentState.rt[activeProfileName].pt[component].activeType =  this.rtLookup[structure.valueConstraint.valueTemplateRefs[0]].resourceURI
-                    //     }
-                    //     currentState.rt[activeProfileName].pt[component].userValue['@type'] = currentState.rt[activeProfileName].pt[component].activeType
-                    // }
-
-
-
-                    // if (parentStructure){
-                    //     console.log(parentStructure)
-                    //     console.log(parentStructure.valueConstraint)
-                    //     console.log(parentStructure.valueConstraint.valueTemplateRefs)
-                    //     console.log(parentStructure.valueConstraint.valueTemplateRefs.length)
-
-                    //     // also check at the current level if it is a ref template
-                    //     if (parentStructure.valueConstraint && parentStructure.valueConstraint.valueTemplateRefs && parentStructure.valueConstraint.valueTemplateRefs.length > 1){
-                    //         console.log('here')
-                    //         if (!currentState.rt[activeProfileName].pt[component].activeType){
-                    //            currentState.rt[activeProfileName].pt[component].activeType =  this.rtLookup[parentStructure.valueConstraint.valueTemplateRefs[0]].resourceURI
-                    //         }
-                    //         currentState.rt[activeProfileName].pt[component].userValue['@type'] = currentState.rt[activeProfileName].pt[component].activeType
-                    //     }
-                    // }
-
-
-
                 }else if (parentStructure && key == 'http://www.w3.org/2002/07/owl#sameAs' && currentState.rt[activeProfileName].pt[component].propertyURI == parentStructure.propertyURI){
-                    console.log('case 2')
+                    // console.log('case 2')
                     currentState.rt[activeProfileName].pt[component].userValue = {
                             '@guid': short.generate(),
                             '@type': await exportXML.suggestType(parentStructure.propertyURI),
@@ -2052,8 +2150,7 @@ const parseProfile = {
                         }
 
                 }else if (structure.type == 'lookup' && parentStructure && relatedEdgecaseParentProperty > -1){
-
-                    console.log('hurrr Triggerd')
+                    // console.log('case 3')
                     // thre are some very nested template, which we are just checking for
                     if (!currentState.rt[activeProfileName].pt[component].userValue[parentStructure.propertyURI]){
                         currentState.rt[activeProfileName].pt[component].userValue[parentStructure.propertyURI] = []
@@ -2064,6 +2161,7 @@ const parseProfile = {
 
                     if (!currentState.rt[activeProfileName].pt[component].userValue['@type']){
                         currentState.rt[activeProfileName].pt[component].userValue['@type'] = await exportXML.suggestType(currentState.rt[activeProfileName].pt[component].propertyURI)
+                  
                     }
 
 
@@ -2094,7 +2192,7 @@ const parseProfile = {
 
 
                 }else if (currentState.rt[activeProfileName].pt[component].valueConstraint && currentState.rt[activeProfileName].pt[component].valueConstraint.valueTemplateRefs && currentState.rt[activeProfileName].pt[component].valueConstraint.valueTemplateRefs.length > 1){
-                    console.log('case 4')
+                    // console.log('case 4')
                     // this is ref template, so they select what Type it is from the refTemeplate selector
 
                     // does it have it set? otherwise we need to set it to the default, first refTempalte
@@ -2102,7 +2200,7 @@ const parseProfile = {
                        currentState.rt[activeProfileName].pt[component].activeType =  this.rtLookup[currentState.rt[activeProfileName].pt[component].valueConstraint.valueTemplateRefs[0]].resourceURI
                     }
                     
-                    console.log(value)
+
                     
                     currentState.rt[activeProfileName].pt[component].userValue = {
                             '@guid': short.generate(),
@@ -2124,7 +2222,7 @@ const parseProfile = {
                 
                 }else{
 
-
+                    console.log('case 5')
 
                     // dunno, use the root level
                     currentState.rt[activeProfileName].pt[component].userValue = {
@@ -2169,127 +2267,6 @@ const parseProfile = {
 
             }
 
-            // // check if this profile has the pt we are looking for
-            // if (currentState.rt[activeProfileName].pt[component]){
-
-            //     // is this a lookup entitiy or a literal / simple value
-            //     if (value.contextValue){
-                    
-            //         
-
-            //         // currentState.rt[activeProfileName].pt[component].userValue['http://www.w3.org/2002/07/owl#sameAs'] = {'http://www.w3.org/2000/01/rdf-schema#label': value.title,URI:value.uri, '@type': value.typeFull, context: value}
-
-            //         // // is it precoordinated
-            //         // if (value.precoordinated){
-            //         //     currentState.rt[activeProfileName].pt[component].userValue['http://www.w3.org/2002/07/owl#sameAs']['http://www.loc.gov/mads/rdf/v1#componentList'] = []
-            //         //     for (let pc of value.precoordinated){                            
-            //         //         currentState.rt[activeProfileName].pt[component].userValue['http://www.w3.org/2002/07/owl#sameAs']['http://www.loc.gov/mads/rdf/v1#componentList'].push({
-            //         //             'http://www.w3.org/2000/01/rdf-schema#label': pc.label,
-            //         //             '@type': pc.typeFull,
-            //         //             'URI': pc.uri
-            //         //         })
-            //         //     }
-
-            //         // }
-
-            //         //
-
-
-            //         // is it a nested lookup entitiy or a standa alone component
-            //         // if (template && !template.nested){
-            //         //     currentState.rt[activeProfileName].pt[component].userValue[key] = {'http://www.w3.org/2000/01/rdf-schema#label': value.title,URI:value.uri, '@type': value.type, context: value}
-            //         //     currentState.rt[activeProfileName].pt[component].userValue['@type'] = template.resourceURI
-            //         // }else if (template && template.nested){
-            //         //     currentState.rt[activeProfileName].pt[component].userValue[key] = {'http://www.w3.org/2000/01/rdf-schema#label': value.title,URI:value.uri, '@type': value.type, context: value}
-            //         //     currentState.rt[activeProfileName].pt[component].userValue['@type'] = template.resourceURI
-                        
-            //         //     // currentState.rt[activeProfileName].pt[component].userValue['@type'] = template.resourceURI
-            //         //     // currentState.rt[activeProfileName].pt[component].userValue[currentState.rt[activeProfileName].pt[component].propertyURI] = {literal: value.title,URI:value.uri, '@type': value.type}
-            //         //     // currentState.rt[activeProfileName].pt[component].userValue.context = value
-            //         // }
-            //     }
-
-            //     // else{
-
-                    
-            //     //     // are we clearing the state
-            //     //     if (typeof value === 'object' && Object.keys(value).length==0){
-            //     //         // if (currentState.rt[activeProfileName].pt[component].userValue[key]) delete currentState.rt[activeProfileName].pt[component].userValue[key]                        
-            //     //         // if (currentState.rt[activeProfileName].pt[component].userValue['http://www.w3.org/2000/01/rdf-schema#label']) delete currentState.rt[activeProfileName].pt[component].userValue['http://www.w3.org/2000/01/rdf-schema#label'] 
-            //     //         // if (currentState.rt[activeProfileName].pt[component].userValue['@type']) delete currentState.rt[activeProfileName].pt[component].userValue['@type'] 
-            //     //         // if (currentState.rt[activeProfileName].pt[component].userValue['uri']) delete currentState.rt[activeProfileName].pt[component].userValue['uri'] 
-
-            //     //         if (currentState.rt[activeProfileName].pt[component].userValue['http://www.w3.org/2002/07/owl#sameAs']) delete currentState.rt[activeProfileName].pt[component].userValue['http://www.w3.org/2002/07/owl#sameAs']
-            //     //     }else{
-                        
-
-            //     //         // when we a storing a literal we want to store it under the URI of its componet, not just a label, since all properties are co-mingling
-            //     //         // bad idea
-            //     //         // if (key === 'http://www.w3.org/2000/01/rdf-schema#label'){
-            //     //         //     key = currentState.rt[activeProfileName].pt[component].propertyURI
-            //     //         // }
-
-            //     //         // notes hit differently
-            //     //         if (template.resourceURI == 'http://id.loc.gov/ontologies/bibframe/Note'){
-                            
-            //     //             // doing a first level note, not a nested note
-            //     //             if (currentState.rt[activeProfileName].pt[component].propertyURI == 'http://id.loc.gov/ontologies/bibframe/note'){
-
-            //     //                 currentState.rt[activeProfileName].pt[component].userValue[key] = value
-
-            //     //             }else{
-            //     //                 // doing a bnode
-            //     //                 if (!currentState.rt[activeProfileName].pt[component].userValue['http://id.loc.gov/ontologies/bibframe/note']){
-            //     //                     currentState.rt[activeProfileName].pt[component].userValue['http://id.loc.gov/ontologies/bibframe/note'] = {'@type':'http://id.loc.gov/ontologies/bibframe/Note'}
-            //     //                 }
-            //     //                 currentState.rt[activeProfileName].pt[component].userValue['http://id.loc.gov/ontologies/bibframe/note'][key] = value
-
-            //     //             }
-            //     //         }else{
-
-            //     //             // get the class/prdicate
-            //     //             let keySegment = key.split('/')[key.split('/').length-1]
-            //     //             if (keySegment.charAt(0) === keySegment.charAt(0).toUpperCase()){
-
-            //     //                 // make the property version of it                                
-            //     //                 keySegment = setCharAt(keySegment,0,keySegment.charAt(0).toLowerCase())
-            //     //                 let url = key.split('/')
-            //     //                 url.splice(url.length-1,1)
-            //     //                 url.push(keySegment)
-            //     //                 url = url.join('/')
-                                
-            //     //                 // does it exist in our ontology
-            //     //                 if (lookupUtil.ontologyPropertyExists(url)){
-            //     //                     currentState.rt[activeProfileName].pt[component].userValue[url] = value
-            //     //                     // currentState.rt[activeProfileName].pt[component].userValue['@type'] = template.resourceURI                                    
-
-            //     //                 }else{
-
-            //     //                     currentState.rt[activeProfileName].pt[component].userValue[key] = value
-            //     //                     currentState.rt[activeProfileName].pt[component].userValue['@type'] = template.resourceURI                                
-            //     //                 }
-
-                                
-
-            //     //             }else{
-            //     //                 currentState.rt[activeProfileName].pt[component].userValue[key] = value
-            //     //                 currentState.rt[activeProfileName].pt[component].userValue['@type'] = template.resourceURI                                
-            //     //             }
-
-
-            //     //         }
-
-
-
-            //     //     }
-
-
-            //     // }
-                
-                
-            // }
-
-        // })
         let pValue = (value && value.title) ? ` (${value.title})` : "";
         let pURI = (parentStructure) ? parentStructure.propertyURI : structure.propertyURI;
         store.state.activeUndoLog.push(`Added lookup value${pValue} to ${exportXML.namespaceUri(pURI)}`)
@@ -2424,9 +2401,9 @@ const parseProfile = {
                                 continue
                             }
 
-                            console.log('doing',val,pt)
+                            
 
-                            console.log(config.literalLangOptions.ignorePtURIs.indexOf(pt.propertyURI))
+                            
                             if (config.literalLangOptions.ignorePtURIs.indexOf(pt.propertyURI)>-1){
                                 continue
                             }
@@ -2554,19 +2531,24 @@ const parseProfile = {
 
     },
 
-    returnUserValues: function(currentState, component, propertyURI){
+    returnUserValues: function(currentState, activeRt, component, propertyURI){
         let results = false
 
         // eslint-disable-next-line
         let temp = propertyURI 
 
-        Object.keys(currentState.rt).forEach((rt)=>{
+        // Object.keys(currentState.rt[activeRt]).forEach((rt)=>{
             // check if this profile has the pt we are looking for
-            if (currentState.rt[rt].pt[component]){
-                results = currentState.rt[rt].pt[component].userValue
+            // console.log('currentState',currentState)
+            // console.log('activeRt=',activeRt)
+
+
+            if (currentState.rt[activeRt].pt[component]){
+                results = currentState.rt[activeRt].pt[component].userValue
  
             }
-        })
+
+        // })
         
         return results
 
@@ -2678,7 +2660,7 @@ const parseProfile = {
                     }
                 }
             }
-            console.log(instanceCount, instanceURIbasedOnWork)
+            
 
             // if there are no instances yet use the instanceURIbasedOnWork
             if (instanceCount==0){
@@ -2754,7 +2736,7 @@ const parseProfile = {
         let items = Object.keys(profile.rt).filter(i => i.includes(":Item"))
         itemCount = items.length
         
-        console.log(items)
+        
         for (let i of items){
             if (i.includes('-')){
                 let nid = parseInt(i.split('-')[1])
@@ -2840,7 +2822,7 @@ const parseProfile = {
             "defaults": [],
             "useValuesFrom": [],
             "valueDataType": {},
-          "valueTemplateRefs": ['lc:RT:bf2:AdminMetadata:BFDB']
+          "valueTemplateRefs": this.returnAdminMedataToUse(newRdId)
           }
         }
 
@@ -3104,7 +3086,7 @@ const parseProfile = {
             "defaults": [],
             "useValuesFrom": [],
             "valueDataType": {},
-          "valueTemplateRefs": ['lc:RT:bf2:AdminMetadata:BFDB']
+          "valueTemplateRefs": this.returnAdminMedataToUse(newRdId)
           }
         }
 
@@ -3171,7 +3153,7 @@ const parseProfile = {
                 for (let key in profile.rt[newRdId].pt){
 
                     if (profile.rt[newRdId].pt[key].propertyURI == 'http://id.loc.gov/ontologies/bibframe/adminMetadata'){
-                        // console.log('hooooo',profile.rt[newRdId].pt[key])
+                        // 
 
                         // replace with our id
                         profile.rt[newRdId].pt[key].userValue['http://id.loc.gov/ontologies/bflc/catalogerId'] = [
@@ -3304,8 +3286,8 @@ const parseProfile = {
 
       }
 
-      console.log('useProfile useProfile')
-      console.log(useProfile)
+      
+      
       if (!useProfile.log){
         useProfile.log = []
       
@@ -3366,7 +3348,7 @@ const parseProfile = {
 
             if (rt.includes(':Instance')){
 
-                console.log(rt)
+                
                 // add itself in 
                 newOrder.push(rt)
                 let thisInstanceURI = profile.rt[rt].URI
@@ -3374,7 +3356,7 @@ const parseProfile = {
                 // then look for its items
                 for (let k in itemLookup){
                     if (itemLookup[k] == thisInstanceURI){
-                        console.log('--',k)
+                        
                         newOrder.push(k)                        
                     }
                 }
@@ -3470,7 +3452,7 @@ const parseProfile = {
     returnDiagramMiniMap: function(activeProfile){
 
 
-        console.log('returnDiagramMiniMapreturnDiagramMiniMapreturnDiagramMiniMapreturnDiagramMiniMap')
+        
         console.log(activeProfile)
 
         // this.hasInstance = []
@@ -3548,6 +3530,17 @@ const parseProfile = {
 
     },
 
+    returnAdminMedataToUse: function(rtName){
+        if (rtName.includes(":GPO")){
+            return ['lc:RT:bf2:GPOMono:AdminMetadata']            
+        }
+        return ['lc:RT:bf2:AdminMetadata:BFDB']
+    },
+
+
+
+
+
     // does all the work to setup a new profile read to be eaded and posted as new
     loadNewTemplate(useStartingPoint,addAdmin){
 
@@ -3557,7 +3550,7 @@ const parseProfile = {
 
 
       let useProfile = JSON.parse(JSON.stringify(store.state.profiles[useStartingPoint]))
-
+      
       // some profiles have nested components at the root level used in that component
       // so if it doesn't end with one of the main type of resources we want to edit 
       // then we don't want to render it, since it is probably being used in the main RT somewhere
@@ -3692,12 +3685,11 @@ const parseProfile = {
                 "defaults": [],
                 "useValuesFrom": [],
                 "valueDataType": {},
-                "valueTemplateRefs": ['lc:RT:bf2:AdminMetadata:BFDB']
+                "valueTemplateRefs": [  (!rt.includes(':GPO')) ? 'lc:RT:bf2:AdminMetadata:BFDB' :   'lc:RT:bf2:GPOMono:AdminMetadata'   ]
               }
             }
 
           let adminMetadataPropertyLabel = 'http://id.loc.gov/ontologies/bibframe/adminMetadata|Admin Metadata'
-
 
           
           useProfile.rt[rt].pt[adminMetadataPropertyLabel] = JSON.parse(JSON.stringify(adminMetadataProperty))
@@ -3716,6 +3708,9 @@ const parseProfile = {
 
 
     }
+
+
+
 
 
 

@@ -116,9 +116,9 @@ const lookupUtil = {
                             let metadata = {uri:d['@id'], label: [], code: [], displayLabel: [] }
                             label.forEach((l)=>{
                                 labelWithCode.push(`${l} (${d['@id'].split('/').pop()})`)
-                                metadata.displayLabel.push(`${l} (${d['@id'].split('/').pop()})`)
+                                metadata.displayLabel.push(`${l.trim()} (${d['@id'].split('/').pop()})`)
 
-                                metadata.label.push(l)
+                                metadata.label.push(l.trim())
                                 metadata.code.push(d['@id'].split('/').pop())
                                 
                             })                          
@@ -154,22 +154,99 @@ const lookupUtil = {
         return dataProcessed
     },
 
-    loadSimpleLookup: async function(uri){
-        let url = uri
+    loadSimpleLookup: async function(uris){
 
-        // TODO more checks here
-        if (!uri.includes('.json')){
-            url = url + '.json'
+        // TODO make this better for multuple lookup list (might not be needed)
+
+        if (!Array.isArray(uris)){
+          uris=[uris]
         }
 
-        if (!this.lookupLibrary[url]){
-            let data = await this.fetchSimpleLookup(url)
-            data = this.simpleLookupProcess(data,uri)
-            this.lookupLibrary[url] = data          
-            return data 
-        }else{
-            return this.lookupLibrary[url]
+
+        for (let uri of uris){
+
+
+          let url = uri
+
+          // TODO more checks here
+          if (!uri.includes('.json')){
+              url = url + '.json'
+          }
+
+          if (!this.lookupLibrary[url]){
+              let data = await this.fetchSimpleLookup(url)
+              data = this.simpleLookupProcess(data,uri)
+              this.lookupLibrary[url] = data          
+              return data 
+          }else{
+              return this.lookupLibrary[url]
+          }
+
         }
+
+
+
+    },
+
+    loadSimpleLookupKeyword: async function(uris,keyword){
+
+
+        if (!Array.isArray(uris)){
+          uris=[uris]
+        }
+
+        let results = {metadata:{ uri:uris[0]+'KEYWORD', values:{}  }}
+
+        for (let uri of uris){
+
+
+          // let orignalURI = uri
+          // build the url
+
+          if (uri.at(-1) == '/'){
+            uri[-1] = ''
+          }
+
+
+          let url = `${uri}/suggest2/?q=${keyword}&count=25`
+
+          let r = await this.fetchSimpleLookup(url)
+
+          if (r.hits && r.hits.length==0){
+            url = `${uri}/suggest2/?q=${keyword}&count=25&searchtype=keyword`
+            r = await this.fetchSimpleLookup(url)
+
+          }
+
+          
+          if (r.hits && r.hits.length>0){
+            for (let hit of r.hits){
+              results.metadata.values[hit.uri] = {uri:hit.uri, label: [hit.suggestLabel], authLabel:hit.aLabel, code: [], displayLabel: [hit.suggestLabel] }
+              results[hit.uri] = [hit.suggestLabel]
+            }
+
+          }
+
+        }
+
+        console.log(results)
+
+        return results
+
+    },
+
+
+
+
+
+    
+    
+
+
+
+    supportedRomanizations: async function(){
+
+      return fetch(config.returnUrls().utilLang+'romanize').then(response => response.json())
 
     },
 
@@ -510,6 +587,12 @@ const lookupUtil = {
             
           }
 
+          if (jsonuri.includes('gpo_') && jsonuri.includes('preprod') ){
+            jsonuri = jsonuri.replace('8080','8295')
+            jsonuri = jsonuri.replace('8230','8295')
+            jsonuri = jsonuri.replace('https://id.','https://preprod-8295.id.')
+          }
+
 
           // if were local host then undo it
           if (config.returnUrls().dev){
@@ -592,9 +675,25 @@ const lookupUtil = {
                   counter++
 
 
+                  let url = i['@id']
+
+                  if (url.includes('gpo_')  ){
+
+                    url = url.replace('https://id.','https://preprod-8295.id.')
+                    url = url.replace('http://id.','http://preprod-8295.id.')
+
+                  }
+
+
+                  if (url.includes('/instances/') || url.includes('/works/') || url.includes('/hubs/')){
+                    if (config.returnUrls().env === 'production'){
+                      url = url.replace('https://id.','https://preprod-8080.id.')
+                      url = url.replace('http://id.','http://preprod-8080.id.')
+                    }
+                  }
                   
 
-                  let response = await fetch(i['@id'].replace('http://','https://')+'.nt');
+                  let response = await fetch(url.replace('http://','https://')+'.nt');
                   let text  = await response.text()
 
                   let instanceText = ""
@@ -789,7 +888,6 @@ const lookupUtil = {
             }
 
 
-            
             var nodeMap = {};
             
             data.forEach(function(n){
@@ -827,20 +925,38 @@ const lookupUtil = {
               if (n['http://www.loc.gov/mads/rdf/v1#isMemberOfMADSCollection']){
                 nodeMap['MADS Collection'] = n['http://www.loc.gov/mads/rdf/v1#isMemberOfMADSCollection'].map(function(d){ return d['@id']})
               } 
+
+
+              
+
+              if (n['@type'].includes('http://id.loc.gov/ontologies/lcc#ClassNumber')>-1){
+
+                if (!nodeMap['LC Classification']){
+                  nodeMap['LC Classification'] = []
+                }
+
+
+                if (n['http://www.loc.gov/mads/rdf/v1#code'] && n['http://id.loc.gov/ontologies/bibframe/assigner']){
+                  nodeMap['LC Classification'].push(`${n['http://www.loc.gov/mads/rdf/v1#code'][0]['@value']} (${n['http://id.loc.gov/ontologies/bibframe/assigner'][0]['@id'].split('/').pop()})`)
+                }else if (n['http://www.loc.gov/mads/rdf/v1#code']){
+                  nodeMap['LC Classification'].push(n['http://www.loc.gov/mads/rdf/v1#code'][0]['@value'])
+                }
+
+              }
+
+
+
               if (n['http://www.loc.gov/mads/rdf/v1#classification']){
-                
-
                 nodeMap['Classification'] = n['http://www.loc.gov/mads/rdf/v1#classification'].map(function(d){ return d['@value']})
-
+                nodeMap['Classification'] = nodeMap['Classification'].filter((v)=>{(v)})
               } 
 
 
 
 
             })
-            // pull out the labels
 
-            
+            // pull out the labels
             data.forEach(function(n){
 
               // loop through all the possible types of row
@@ -856,7 +972,12 @@ const lookupUtil = {
                   }else if (k == 'Classification'){
                     if (nodeMap[k].length>0){
                       results.nodeMap[k]=nodeMap[k]
-                    }                  
+                    }    
+                  }else if (k == 'LC Classification'){
+                    if (nodeMap[k].length>0){
+                      results.nodeMap[k]=nodeMap[k]
+                    }   
+
                   }else if (n['@id'] && n['@id'] == uri){
                    
                     if (n['http://www.loc.gov/mads/rdf/v1#authoritativeLabel']){
@@ -899,6 +1020,7 @@ const lookupUtil = {
 
 
             })
+
 
             data.forEach((n)=>{
               
@@ -985,7 +1107,16 @@ const lookupUtil = {
 
 
           }
+
+          // clean up any empty ones so they don't display
+          Object.keys(results.nodeMap).forEach((k)=>{
+            if (results.nodeMap[k].length==0){
+              delete results.nodeMap[k]
+            }
+          })
           
+
+
 
           
           return results;
@@ -1169,9 +1300,13 @@ const lookupUtil = {
           url = url + '.rdf'
         }
         
-        
-        let r = await this.fetchSimpleLookup(url)
+        let r
 
+        try{
+          r = await this.fetchSimpleLookup(url)
+        }catch{
+          return false
+        }
         
 
 

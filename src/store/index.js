@@ -89,7 +89,7 @@ export default new Vuex.Store({
     settingsHideEmptyFields: false,
     settingsLeftMenuEnriched: true,
 
-    settingsTreatLikeNoteFields: "LARGE_FIELDS",
+    settingsTreatLikeNoteFields: "ALL_FIELDS",
 
 
     // used for auto complete lookups 
@@ -109,6 +109,7 @@ export default new Vuex.Store({
 
     contextData: {},
 
+    supportedRomanizations: [],
 
 
     idWorkSearchResults: [],
@@ -358,6 +359,12 @@ export default new Vuex.Store({
       state.diagramMiniMap = val
     }, 
 
+
+    SUPORTEDROMANIZATIONS(state, val) {
+      state.supportedRomanizations = val
+    }, 
+ 
+
  
 
     
@@ -391,8 +398,15 @@ export default new Vuex.Store({
     },
 
     async fetchLookupValues ({ commit },data) {
-      let p = await lookupUtil.loadSimpleLookup(data.url)
+      let p
+      if (data.keyword){
+        p = await lookupUtil.loadSimpleLookupKeyword(data.url, data.keyword)
+      }else{
+        p = await lookupUtil.loadSimpleLookup(data.url)  
+      }
+      
       commit('LOOKUP', p)
+      
     },
 
     async fetchLookupValuesComplex ({ commit },data) {   
@@ -817,7 +831,20 @@ export default new Vuex.Store({
     },
 
 
+
+    async setSupportedRomanizations ({ commit }) {   
+    
+
+
+      let supportedRomanizations = await lookupUtil.supportedRomanizations() 
+      console.log('supportedRomanizations',supportedRomanizations)
+      commit('SUPORTEDROMANIZATIONS', supportedRomanizations)    
+     
+    },
+
  
+
+
 
 
 
@@ -932,6 +959,7 @@ export default new Vuex.Store({
     sendToInstance: ({commit, state}, data) => {
       let newProfile = parseProfile.sendToInstance(data.from,data.to,state.activeProfile)
       commit('ACTIVEPROFILE', newProfile)    
+      state.saveRecord(state,commit)
     },
 
 

@@ -45,6 +45,7 @@ const uiUtils = {
           activeInputIndex = i
         }
       }
+      console.log("activeInputIndex===",activeInputIndex,list[activeInputIndex-1])
       if (activeInputIndex != -1){
         // see if there is a next input
         if (list[activeInputIndex-1]){
@@ -96,14 +97,36 @@ const uiUtils = {
 
     focusSidebars(){
 
-      if (document.getElementsByClassName('left-menu-list-item-active').length==0){
-        return false
-      }
-      // scroll those elements into view, the left and right
-      document.getElementsByClassName('left-menu-list-item-active')[0].scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"})
-      if (document.getElementsByClassName('opac-field-active').length>0){
-        document.getElementsByClassName('opac-field-active')[0].scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"})
-      }
+
+      window.setTimeout(()=>{
+
+
+        if (document.getElementsByClassName('left-menu-list-item-active').length==0){
+          return false
+        }
+
+        // scroll those elements into view, the left and right
+        document.getElementsByClassName('left-menu-list-item-active')[0].scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"})
+
+        // not sure why, sometimes it doesn't tirgger
+        // the class exists and it finds it in the dom but the above scroll doesn't work, sometimes it does
+        // so wait a moment longer and set it again to make sure
+        window.setTimeout(function() {
+          document.getElementsByClassName('left-menu-list-item-active')[0].scrollIntoView({block: "center"})
+        }, 500);
+        
+        if (document.getElementsByClassName('opac-field-active').length>0){
+          
+          document.getElementsByClassName('opac-field-active')[0].scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"})
+          window.setTimeout(function() {
+            document.getElementsByClassName('opac-field-active')[0].scrollIntoView({block: "center"})
+          }, 500);
+
+        }
+
+
+      },100)
+
 
     },
 
@@ -164,12 +187,18 @@ const uiUtils = {
 
     dupeProperty(){
         
-        let el = document.getElementById(this.activeInput).parentElement
-        while (el.classList.contains('component') === false){
-            el=el.parentElement
-        }
 
-        el.getElementsByClassName('property-duplicate')[0].click()
+        if (document.getElementsByClassName('left-menu-list-item-active').length>0){
+          document.getElementsByClassName('left-menu-list-item-active')[0].getElementsByClassName('left-menu-button-dupe-blank')[0].click()
+        }        
+
+
+        // let el = document.getElementById(this.activeInput).parentElement
+        // while (el.classList.contains('component') === false){
+        //     el=el.parentElement
+        // }
+
+        // el.getElementsByClassName('property-duplicate')[0].click()
         
     },
 

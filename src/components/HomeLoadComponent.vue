@@ -484,16 +484,26 @@ export default {
         // '/bfe2/editor/tests/instances/21210374.editor-pkg.xml', // xml error - hebrew book
 
 
+        // '/bfe2/editor/tests/instances/21533302.editor-pkg.xml', // subject editing test
+
+
+
+
+
         // '/bfe2/editor/tests/instances/20969670.editor-pkg.xml', // non-latin souble title
 
 
         // '/bfe2/editor/tests/instances/22395548.editor-pkg.xml', // multiple non-latin literal values in main title and provision activity
 
-        '/bfe2/editor/tests/instances/21340456.editor-pkg.xml', // multiple non-latin literal values in main title and provision activity
+        // '/bfe2/editor/tests/instances/21340456.editor-pkg.xml', 
+        
+        // '/bfe2/editor/tests/instances/21295922.editor-pkg.xml', 
+
+        // '/bfe2/editor/tests/instances/22519577.editor-pkg.xml', // non uri auth label dvd example
 
 
 
-        // '/bfe2/editor/tests/instances/22471751.editor-pkg.xml', // DVD fields not populating
+        '/bfe2/editor/tests/instances/22471751.editor-pkg.xml', // DVD fields not populating
 
 
 

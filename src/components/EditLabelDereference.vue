@@ -56,10 +56,18 @@ export default {
           }else{
 
             let self = this
-            fetch(URL, {method: 'HEAD', redirect: "follow" }).then(
+            fetch(URL, {method: 'HEAD' }).then(
               function(response)
                 {
+
+                  // an id upgrade enables a ecoded pref-label to be exposed 
+                  // since the old x-preflabel is not encoded and header vars are not unicode supporting
+                  // so use it if avialable
                   let preflabel = response.headers.get("x-preflabel");
+                  if (response.headers.get("x-preflabel-encoded")){
+                    preflabel = decodeURIComponent(response.headers.get("x-preflabel-encoded"));
+                  }
+
                   if (preflabel){
                     self.displayLabel = preflabel
 
@@ -69,7 +77,12 @@ export default {
 
                   }
                 }
-              );
+              ).catch(function() {
+                    
+                    // there was something with the request, ignore
+
+
+              });
 
 
           }
@@ -82,7 +95,7 @@ export default {
 
           // some common hardcoded values
           if (this.URI == 'http://id.loc.gov/authorities/subjects'){
-            this.displayLabel = 'LCSH'
+            this.displayLabel = 'Library of Congress subject headings'
           }
 
 
