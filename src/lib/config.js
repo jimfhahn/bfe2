@@ -5,10 +5,10 @@ const config = {
 
   regionUrls: {
     dev: {
-      ldpjs: "https://www.bibframe.app/api-staging/",
-      util: "https://www.bibframe.app/util/",
-      utilLang: "https://www.bibframe.app/util-lang/",
-      publish: "https://www.bibframe.app/util/publish/staging",
+      ldpjs: "https://data.bibframe.app/api-staging/",
+      util: "https://data.bibframe.app/util/",
+      utilLang: "https://data.bibframe.app/util-lang/",
+      publish: "https://data.bibframe.app/util/publish/staging",
       bfdb: "https://id.loc.gov/",
       profiles: "/bfe2/editor/profiles.json",
       starting: "/bfe2/editor/starting.json",
