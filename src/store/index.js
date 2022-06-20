@@ -3,6 +3,7 @@ import Vuex from "vuex";
 import parseProfile from "@/lib/parseProfile"
 import lookupUtil from "@/lib/lookupUtil"
 import exportXML from "@/lib/exportXML"
+// import exportXMLWorker from "@/lib/exportXMLWorker"
 
 Vue.use(Vuex);
 
@@ -144,6 +145,7 @@ export default new Vuex.Store({
 
       // console.log(state, commit,exportXML)
       // state.lastActiveProfile = JSON.parse(JSON.stringify(state.activeProfile))
+      // exportXMLWorker.test()
       
       exportXML.toBFXML(state.activeProfile)
       .then((xml)=>{
@@ -672,6 +674,40 @@ export default new Vuex.Store({
       state.saveRecord(state,commit)
 
     }, 
+
+
+    setTemplateDataFlow({ commit, state }, data) { 
+
+
+
+      if (!state.activeProfile.templateDataFlow){
+        state.activeProfile.templateDataFlow={}
+      }
+
+      if (data.value == 'both'){
+        // if the value is both then it is the default behavior, we don't need to store it
+        delete state.activeProfile.templateDataFlow[data.id]
+      }else{
+        state.activeProfile.templateDataFlow[data.id] = data.value
+      }
+
+      // don't even keep it around if there are no values
+      if (Object.keys(state.activeProfile.templateDataFlow)==0){
+        delete state.activeProfile.templateDataFlow
+      }
+
+      commit('ACTIVEPROFILE', state.activeProfile)
+
+    },
+
+
+    setTemplateName({ commit, state }, data) { 
+      state.activeProfile.templateLabel = data.value
+      commit('ACTIVEPROFILE', state.activeProfile)
+    },
+
+
+    
 
     async setValueSubject({ commit, state }, data) { 
 

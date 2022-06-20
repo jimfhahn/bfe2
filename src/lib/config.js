@@ -7,19 +7,45 @@ const config = {
     dev: {
       ldpjs: "https://data.bibframe.app/api-staging/",
       util: "https://data.bibframe.app/util/",
-      utilLang: "https://data.bibframe.app/util-lang/",
+      utilLang: "https://data.bibframe.apputil-lang/",
       publish: "https://data.bibframe.app/util/publish/staging",
-      bfdb: "https://id.loc.gov/",
+      bfdb: "https:/id.loc.gov/",
       profiles: "/bfe2/editor/profiles.json",
       starting: "/bfe2/editor/starting.json",
       env: "staging",
       dev: true,
     },
+
+    staging: {
+      ldpjs: "https://data.bibframe.app/api-staging/",
+      util: "https://data.bibframe.app/util/",
+      utilLang: "https://data.bibframe.apputil-lang/",
+      publish: "https://data.bibframe.app/util/publish/staging",
+      bfdb: "https:/id.loc.gov/",
+      profiles: "/bfe2/editor/profiles.json",
+      starting: "/bfe2/editor/starting.json",
+      env: "staging", 
+    },
+
+    production: {
+      ldpjs: "https://data.bibframe.app/api-staging/",
+      util: "https://data.bibframe.app/util/",
+      utilLang: "https://data.bibframe.apputil-lang/",
+      publish: "https://data.bibframe.app/util/publish/staging",
+      bfdb: "https:/id.loc.gov/",
+      profiles: "/bfe2/editor/profiles.json",
+ starting: "/bfe2/editor/starting.json",
+      env: "production",
+    },
   },
 
   returnUrls: function () {
-    if (window.location.href.startsWith("https://")) {
+    if (window.location.href.startsWith("http://localhost")) {
       return this.regionUrls.dev;
+    } else if (window.location.href.startsWith("https://localhost")) {
+      return this.regionUrls.staging;
+    } else if (window.location.href.startsWith("https://data.bibframe.app")) {
+      return this.regionUrls.production;
     }
   },
 

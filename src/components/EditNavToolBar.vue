@@ -340,6 +340,44 @@ button[disabled]{
 }
 
 
+.logo-home-text {
+  stroke: rgb(42, 42, 42);
+  stroke-width: 0;
+  
+}
+
+.logo-home-text:hover {
+  fill: white;
+  stroke-width: 1;
+  stroke-linejoin: round;
+  stroke-dasharray: 100 100;
+  stroke-dashoffset: 0;
+  animation: stroke 5s infinite linear;
+}
+
+.logo-home-text:hover:nth-child(5n+1) {
+  stroke: rgb(42, 42, 42);
+  animation-delay: -1.2s;
+}
+
+
+@-webkit-keyframes stroke {
+  100% {
+    stroke-dashoffset: -400;
+  }
+}
+@keyframes stroke {
+  100% {
+    stroke-dashoffset: -400;
+  }
+}   
+
+
+
+.template-td:hover{
+    background-color: #f8fec6;
+    cursor: pointer;
+}
 
 </style>
 
@@ -353,10 +391,42 @@ button[disabled]{
           <Keypress key-event="keydown" :multiple-keys="[{keyCode: 80, modifiers: ['ctrlKey','shiftKey'],preventDefault: true}]" @success="publish" />
           <Keypress key-event="keydown" :key-code="27" @success="escapeKey" />
 
+
+
             <div style="flex:1">
 
-              <div v-if="diagramMiniMap !== false" style="height: 50px; padding-left: 10px;">
+
+
+              <div v-if="diagramMiniMap !== false" style="height: 50px;">
                 
+
+                <router-link to="/">
+                  <div  style="display:inline-block; cursor: pointer; width: 50px; height:50px;">
+
+
+
+
+
+                    <svg viewBox="0 0 20 20">
+                      <!-- Symbol-->
+                      <symbol id="s-text">
+                        <text style="font-family: sans-serif;" text-anchor="middle" x="50%" y="50%" dy=".35em">M</text>
+                      </symbol>
+                      <!-- Duplicate symbols-->
+                      <use class="logo-home-text" xlink:href="#s-text"></use>
+                      <use class="logo-home-text" xlink:href="#s-text"></use>
+                      <use class="logo-home-text" xlink:href="#s-text"></use>
+                      <use class="logo-home-text" xlink:href="#s-text"></use>
+                      <use class="logo-home-text" xlink:href="#s-text"></use>
+                    </svg>
+
+
+
+
+                  </div>
+                </router-link>
+
+
                   <div  style="display:inline-block; cursor: pointer" @click="miniMapClick(diagramMiniMap)">
 
                     <template v-if="diagramMiniMap.type != 'Hub'">
@@ -488,7 +558,7 @@ button[disabled]{
 
             <div style="flex:1; position:relative;">
                 
-                <button class="subject-list-button" name="subject-list" title="subject-list" @click="toggleSubjectListDisplay" style="">
+                <button class="subject-list-button" name="subject-list" title="subject-list" @click="toggleSubjectListDisplay()" style="">
 
                   <svg width="25px" height="25px" version="1.1" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                    <path d="m5 83c0-3.6406 2.1914-6.9219 5.5547-8.3164 3.3633-1.3906 7.2344-0.62109 9.8086 1.9531s3.3438 6.4453 1.9531 9.8086c-1.3945 3.3633-4.6758 5.5547-8.3164 5.5547-4.9688 0-9-4.0312-9-9zm9-57c3.6406 0 6.9219-2.1914 8.3164-5.5547 1.3906-3.3633 0.62109-7.2344-1.9531-9.8086s-6.4453-3.3438-9.8086-1.9531c-3.3633 1.3945-5.5547 4.6758-5.5547 8.3164 0 4.9688 4.0312 9 9 9zm0 33c3.6406 0 6.9219-2.1914 8.3164-5.5547 1.3906-3.3633 0.62109-7.2344-1.9531-9.8086s-6.4453-3.3438-9.8086-1.9531c-3.3633 1.3945-5.5547 4.6758-5.5547 8.3164 0 4.9688 4.0312 9 9 9zm30-36h45c3.3125 0 6-2.6875 6-6s-2.6875-6-6-6h-45c-3.3125 0-6 2.6875-6 6s2.6875 6 6 6zm0 33h45c3.3125 0 6-2.6875 6-6s-2.6875-6-6-6h-45c-3.3125 0-6 2.6875-6 6s2.6875 6 6 6zm0 33h45c3.3125 0 6-2.6875 6-6s-2.6875-6-6-6h-45c-3.3125 0-6 2.6875-6 6s2.6875 6 6 6z"/>
@@ -655,7 +725,12 @@ button[disabled]{
 
 
 
+                <button class="simptip-position-left toolbar-main-button" @click="toggleTemplate" data-tooltip="Create Template ([CTRL+SHIFT+T])">
+                    <svg width="50px" height="34px"  version="1.1" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                     <path d="m11.719 11.723v15.613h15.629v-15.613zm20.312 0v15.613h15.629v-15.613zm20.309 0v15.613h15.633v-15.613zm20.312 0v15.613h15.633v-15.613zm-60.934 20.312v15.625l15.629 0.003906v-15.629zm20.312 0v15.625l15.629 0.003906v-15.629zm20.309 0v15.625l15.633 0.003906v-15.629zm20.312 0v15.625l15.633 0.003906v-15.629zm-60.934 20.309v15.629l15.629 0.003906v-15.633zm20.312 0v15.629l15.629 0.003906v-15.633zm20.309 0v15.629l15.633 0.003906v-15.633zm20.312 0v15.629l15.633 0.003906v-15.633zm-60.934 20.312v15.625l15.629 0.003906v-15.629zm20.312 0v15.625l15.629 0.003906v-15.629zm20.309 0v15.625l15.633 0.003906v-15.629zm20.312 0v15.625l15.633 0.003906v-15.629z" fill-rule="evenodd"/>
+                    </svg>
 
+                </button>
 
                 <button class="simptip-position-left toolbar-main-button" @click="togglePreview" data-tooltip="Preview XML ([CTRL+SHIFT+X])">
                     <svg width="50px" height="34px" version="1.1" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
@@ -683,6 +758,91 @@ button[disabled]{
 
 
         </div>
+
+
+        <div v-if="displayTemplate===true" style="height: 100vh; background-color: rgb(248 241 255); position: fixed;left: 0;width: 100%;z-index: 1000;">
+          <div style="display: flex; padding: 1em; height:100%;">
+            <div style="flex: 1; position: relative; height:100%;">
+                
+                <div style="font-weight:bold">Create Template</div>
+                <input type="" class="input" style="font-size:1.25em; width:95%" @change="templateNameChange" v-model="templateLabel" name="" placeholder="Name of Template">
+                
+                <div style="margin-top: 25%">
+                    <button style="font-size: 1.5em;  margin: 0.25em;" @click="displayTemplate===false">Cancel</button>
+                    <button style="font-size: 1.5em;  margin: 0.25em;" @click="saveTemplate(false)">Create</button>
+                </div>
+
+
+            </div>
+            <div style="flex: 1;">
+                
+
+                <div style="height:100%; background-color: transparent; overflow: scroll">
+                    <div>
+                        How should data flow into the template when merging with a resource record?<br>
+                        Template = Data from template should overwrite resource<br>
+                        Resource = Data from resource should overwrite template data<br>
+                        Both = Keep both on import<br>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <td>Property</td>
+                                <td>Template</td>
+                                <td>Resource</td>
+                                <td>Both</td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+                            <template v-for="rt in Object.keys(activeProfile.rt)">
+                                <template v-if="!rt.match(/-[0-9]+$/)">
+                                    
+                                    
+                                    <tr :key="rt">
+                                        <td colspan="4">
+                                            <span v-if="rt.includes(':Work')" style="font-weight:bold;">Work</span>
+                                            <span v-if="rt.includes(':Instance')" style="font-weight:bold;">Instance</span>
+                                            <span v-if="rt.includes(':Item')" style="font-weight:bold;">Item</span>
+                                            <span v-if="rt.includes(':Hub')" style="font-weight:bold;">Hub</span>
+
+                                        </td>
+                                    </tr>
+                                    <tr v-for="pt in activeProfile.rt[rt].ptOrder" :key="rt+pt">
+
+
+                                        <template v-if="Object.keys(activeProfile.rt[rt].pt[pt].userValue).length>1 && templatesDataFlowHide.filter((v)=> { return pt.includes(v) }).length==0">
+                                            <td>
+                                            <span style="padding-left: 10px">{{pt.split('|')[1]}}</span>
+                                            </td>
+                                            <td class="template-td" style="text-align: center;" @click="templatesTDClick">
+                                                <input type="radio" :name="buildPropFlowId(rt,pt)" value="template" @change="templatesPropFlowChange" :checked="templatesPropertyIsChecked(buildPropFlowId(rt,pt),'template')">
+                                            </td>
+                                            <td class="template-td" style="text-align: center;" @click="templatesTDClick">
+                                                <input type="radio" :name="buildPropFlowId(rt,pt)" value="resource" @change="templatesPropFlowChange" :checked="templatesPropertyIsChecked(buildPropFlowId(rt,pt),'resource')">
+                                            </td>
+                                            <td class="template-td" style="text-align: center;" @click="templatesTDClick" v-if="templatesDataFlowCantBeBoth.filter((v)=> { return pt.includes(v) }).length==0">
+                                                <input type="radio" :name="buildPropFlowId(rt,pt)" value="both" @change="templatesPropFlowChange" :checked="templatesPropertyIsChecked(buildPropFlowId(rt,pt),'both')">
+                                            </td>
+                                        </template>
+
+
+                                    </tr>
+                                </template>
+                            </template>
+                            
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+          </div>
+        </div>  
+
 
         <div v-if="displayPreview===true" style="height: 100vh; background-color: #fffff1; position: fixed;left: 0;width: 100%;z-index: 1000;">
           <div style="display: flex;">
@@ -827,6 +987,8 @@ import { mapState } from 'vuex'
 
 import exportXML from "@/lib/exportXML"
 import lookupUtil from "@/lib/lookupUtil"
+import parseProfile from "@/lib/parseProfile"
+
 import config from "@/lib/config"
 import EditLiteralLanguage from "@/components/EditLiteralLanguage"
 import EditNavLiteralDisplayOptions from "@/components/EditNavLiteralDisplayOptions"
@@ -897,13 +1059,29 @@ export default {
       leftMenuEnriched: false,   
       displayLiteralLanguage: false,
 
+      displayTemplate: false,
+
       displayLiteralOptions: false, // Not used currently
       lastMouseY: 10,
       resourceLinks: [],
       displayPreview: false,
       xmlPreview: 'Loading...',
       showPostModal: false,
-      showPostModalErrorMsg: false,      
+      showPostModalErrorMsg: false,
+
+      templateLabel: "",
+
+      templatesDataFlowCantBeBoth: [
+        'id.loc.gov/ontologies/bibframe/adminMetadata',
+
+
+      ],
+      templatesDataFlowHide: [
+        'id.loc.gov/ontologies/bibframe/instanceOf',
+        
+
+      ],  
+
 
       list: [],
       drag: false
@@ -967,6 +1145,7 @@ export default {
 
 
               if (this.showPostModal){ return false}
+              if (this.displayTemplate){ return false}
               if (this.optionDisplay){ return false}
               if (this.subjectListDisplay){ return false}
 
@@ -1024,6 +1203,7 @@ export default {
 
 
               if (this.showPostModal){ return false}
+              if (this.displayTemplate){ return false}
               if (this.displayPreview){ return false}
 
                 
@@ -1049,6 +1229,109 @@ export default {
 
 
   methods:{
+
+
+
+    buildPropFlowId: function(rt,pt){
+
+        // the id will be the profile, the property URI and the primary data type dataTypeURI
+        let id = rt + '|' + this.activeProfile.rt[rt].pt[pt].propertyURI
+        if (this.activeProfile.rt[rt].pt[pt].valueConstraint && this.activeProfile.rt[rt].pt[pt].valueConstraint.valueDataType && this.activeProfile.rt[rt].pt[pt].valueConstraint.valueDataType.dataTypeURI && this.activeProfile.rt[rt].pt[pt].valueConstraint.valueDataType.dataTypeURI.trim() != ''){
+            id = id + '|' + this.activeProfile.rt[rt].pt[pt].valueConstraint.valueDataType.dataTypeURI
+        }
+
+
+        return id
+
+    },
+
+    templatesPropFlowChange: function(event){
+        this.$store.dispatch("setTemplateDataFlow",{ id: event.target.name, value: event.target.value   }).then(() => {   
+        });   
+    },
+
+    templateNameChange: function(){
+
+        this.$store.dispatch("setTemplateName",{ value: this.templateLabel  }).then(() => {   
+        });  
+    },
+
+    templatesTDClick: function(event){
+
+        if (event.target.tagName=='TD'){
+            event.target.children[0].checked="checked"
+            this.templatesPropFlowChange({target:event.target.children[0]})
+        }
+        
+
+
+    },
+
+    templatesPropertyIsChecked: function(property,checkingFor){
+
+        // if there is no data stored then its a "both"
+        // unless its on the the ones that cant be both then its a resource
+        if (this.templatesDataFlowCantBeBoth.filter((v)=> { return property.includes(v) }).length>0){            
+            if (!this.activeProfile.templateDataFlow){
+                if (checkingFor == 'resource'){
+                    return "checked"            
+                }else{
+                    return false
+                }
+            }else if (this.activeProfile.templateDataFlow[property]){
+                if (checkingFor == this.activeProfile.templateDataFlow[property]){
+                    console.log("IT WORKED")
+                    return "checked"
+                }else{
+                    return false
+                }
+            }else{
+                return false // just say no
+            }            
+        }else{
+
+            if (!this.activeProfile.templateDataFlow){
+                
+                // the default return val is both
+                if (checkingFor == 'both'){
+                    return "checked"
+                }else{
+                    return false
+                }
+
+            }else if (this.activeProfile.templateDataFlow[property]){
+                if (checkingFor == this.activeProfile.templateDataFlow[property]){
+                    return "checked"
+                }else{
+                    return false
+                }
+            }else{
+                
+                // the default return val is both
+                if (checkingFor == 'both'){
+                    return "checked"
+                }else{
+                    return false
+                }
+            }  
+
+
+        }
+
+
+    },
+
+    async saveTemplate(overwrite){
+
+        if (this.templateLabel.trim()==''){
+            alert("Please name the template")
+            return false
+        }
+
+        await parseProfile.prepareTemplate(this.activeProfile,overwrite)
+
+
+    },
 
     subjectDragEnd: function(){
 
@@ -1384,6 +1667,24 @@ export default {
 
     },
 
+    toggleTemplate: async function(){
+
+      if (!this.displayTemplate){
+            this.displayTemplate=true
+
+
+
+      }else{
+        this.displayTemplate=false
+       
+
+      }
+
+
+    },
+
+    
+
     escapeKey: function(){
 
       if (this.displayPreview){
@@ -1394,6 +1695,9 @@ export default {
       if (this.showPostModal){
         this.showPostModal = false
       }
+
+    if (this.displayTemplate){ this.displayTemplate = false}
+
 
       if (this.displayLiteralOptions){
         this.displayLiteralOptions = false
