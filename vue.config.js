@@ -1,5 +1,5 @@
 module.exports = {
-  publicPath: process.env.NODE_ENV === 'local'
+  publicPath: process.env.NODE_ENV === 'production'
   ? '/bfe2/editor/'
-  : '<REPLACE>'
+  : '/'
 }

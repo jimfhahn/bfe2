@@ -10,89 +10,25 @@ const config = {
 
 	regionUrls: {
 
-		dev:{
-
-			ldpjs : 'http://localhost:9401/api-staging/',			
-			util  : 'http://localhost:9401/util/',
-			utilLang: 'http://localhost:9401/util-lang/',
-			publish : 'http://localhost:9401/util/publish/staging',
-			bfdb : 'https://preprod-8230.id.loc.gov/',
-			profiles : 'http://localhost:9401/util/profiles/profile/prod',
-			starting: 'http://localhost:9401/util/profiles/starting/prod',
-			id: 'https://id.loc.gov/',
-			env : 'staging',
-			dev: true,
-			displayLCOnlyFeatures: true,
-
-
-		},
-
-		staging:{
-
-			ldpjs : 'https://preprod-3001.id.loc.gov/bfe2/api-staging/',
-			util  :  'https://preprod-3001.id.loc.gov/bfe2/util/',			
-			utilLang  :  'https://editor.id.loc.gov/bfe2/util-lang/',
-			publish: 'https://preprod-3001.id.loc.gov/bfe2/util/publish/staging',
-			bfdb : 'https://preprod-8230.id.loc.gov/',
-			profiles : '/bfe2/util/profiles/profile/stage',
-			// profiles: 'https://preprod-3001.id.loc.gov/api/listconfigs?where=index.resourceType:profile',
-			starting : '/bfe2/util/profiles/starting/stage',
-			id: 'https://preprod-8080.id.loc.gov/',
-			env : 'staging',
-			displayLCOnlyFeatures: true,
-
-		},
-
-		production:{
-
-			ldpjs : 'https://editor.id.loc.gov/bfe2/api-production/',
-			util  :  'https://editor.id.loc.gov/bfe2/util/',
-			utilLang  :  'https://editor.id.loc.gov/bfe2/util-lang/',
-			publish: 'https://editor.id.loc.gov/bfe2/util/publish/production',
-			bfdb : 'https://preprod-8230.id.loc.gov/',
-			// profiles : 'https://editor.id.loc.gov/api/listconfigs?where=index.resourceType:profile',
-			// starting : 'https://editor.id.loc.gov/api/listconfigs?where=index.resourceType:startingPoints&where=index.label:config',
-			profiles : '/bfe2/util/profiles/profile/prod',
-			starting : '/bfe2/util/profiles/starting/prod',
-
-			id: 'https://preprod-8080.id.loc.gov/',
-			env : 'production',
-			displayLCOnlyFeatures: true,
-		},
-
-		bibframeDotOrg:{
-
-			ldpjs : 'https://bibframe.org/marva/api-production/',
-			util  :  'https://bibframe.org/marva/util/',
-			utilLang  :  'https://bibframe.org/marva/util-lang/',
-			publish: 'https://bibframe.org/marva/util/publish/production',
-			bfdb : 'https://id.loc.gov/',
-			profiles : 'https://bibframe.org/marva/util/profiles/profile/prod',
-			starting : 'https://bibframe.org/marva/util/profiles/starting/prod',
-			id: 'https://preprod-8080.id.loc.gov/',
-			env : 'production',
-			publicEndpoints:true,
+		dev: {
+			ldpjs: "https://data.bibframe.app/api-staging/",
+			util: "https://data.bibframe.app/util/",
+			utilLang: "https://data.bibframe.app/util-lang/",
+			publish: "https://data.bibframe.app/util/publish/staging",
+			bfdb: "https://id.loc.gov/",
+			profiles: "/bfe2/editor/profiles.json",
+			starting: "/bfe2/editor/starting.json",
+			env: "staging",
+			publicEndpoints: true,
 			displayLCOnlyFeatures: false
-		}
+			},
+		},
 
-
-
-
-
-	},
-
-	returnUrls: function(){
-
-		if (window.location.href.startsWith('http://localhost')){
-			return this.regionUrls.dev
-		}else if (window.location.href.startsWith('https://preprod-3001')){
-			return this.regionUrls.staging
-		}else if (window.location.href.startsWith('https://editor.id')){
-			return this.regionUrls.production
-		}else if (window.location.href.includes('bibframe.org/marva')){
-			return this.regionUrls.bibframeDotOrg
-		}
-	},
+  returnUrls: function () {
+    if (window.location.href.startsWith("https://")) {
+      return this.regionUrls.dev;
+    }
+  },
 
 
 	convertToRegionUrl: function(url){
