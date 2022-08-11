@@ -73,10 +73,20 @@ const config = {
 			env : 'production',
 			publicEndpoints:true,
 			displayLCOnlyFeatures: false
-		}
+		},
 
-
-
+		dataDotBibframeDotApp:{
+			ldpjs: "https://data.bibframe.app/api-staging/",
+			util: "https://data.bibframe.app/util/",
+			utilLang: "https://data.bibframe.app/util-lang/",
+			publish: "https://data.bibframe.app/util/publish/staging",
+			bfdb: "https://id.loc.gov/",
+			profiles: "/bfe2/editor/profiles.json",
+			starting: "/bfe2/editor/starting.json",
+			env: "production",
+			publicEndpoints: true,
+			displayLCOnlyFeatures: false
+			}
 
 
 	},
@@ -91,6 +101,8 @@ const config = {
 			return this.regionUrls.production
 		}else if (window.location.href.includes('bibframe.org/marva')){
 			return this.regionUrls.bibframeDotOrg
+		}else if (window.location.href.includes('data.bibframe.app')){
+			return this.regionUrls.dataDotBibframeDotApp
 		}
 	},
 
@@ -109,7 +121,7 @@ const config = {
 
 
 
-	postUsingAlmaXmlFormat: false,
+	postUsingAlmaXmlFormat: true,
 
 
 
