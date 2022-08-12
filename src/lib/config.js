@@ -11,21 +11,17 @@ const config = {
 	regionUrls: {
 
 		dev:{
-
-			ldpjs : 'http://localhost:9401/api-staging/',			
-			util  : 'http://localhost:9401/util/',
-			utilLang: 'http://localhost:9401/util-lang/',
-			publish : 'http://localhost:9401/util/publish/staging',
-			bfdb : 'https://preprod-8230.id.loc.gov/',
-			profiles : 'http://localhost:9401/util/profiles/profile/prod',
-			starting: 'http://localhost:9401/util/profiles/starting/prod',
-			id: 'https://id.loc.gov/',
-			env : 'staging',
-			dev: true,
-			displayLCOnlyFeatures: true,
-
-
-		},
+			ldpjs: "https://data.bibframe.app/api-staging/",
+			util: "https://data.bibframe.app/util/",
+			utilLang: "https://data.bibframe.app/util-lang/",
+			publish: "https://data.bibframe.app/util/publish/staging",
+			bfdb: "https://id.loc.gov/",
+			profiles : 'https://bibframe.org/marva/util/profiles/profile/prod',
+			starting : 'https://bibframe.org/marva/util/profiles/starting/prod',
+			env: "staging",
+			publicEndpoints: true,
+			displayLCOnlyFeatures: false
+			},
 
 		staging:{
 

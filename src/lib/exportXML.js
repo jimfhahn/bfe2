@@ -1449,28 +1449,39 @@ const exportXML = {
 			let almaInstancesEl =  rdfBasic.getElementsByTagName("bf:Instance")
 			let almaItemsEl =  rdfBasic.getElementsByTagName("bf:Item")
 
-			// would need to tweak this probably...
-
-			// make a new doc
-			let almaXmlElBib = document.createElement("bib");
+			const doc = document.implementation.createDocument("", "", null);
+			// make a new root element 
+			let almaXmlElBib = doc.createElement("bib");
 			// <bib>
 
-			let almaXmlElRecordFormat = document.createElement("record_format");
+			let almaXmlElRecordFormat = doc.createElement("record_format");
 			almaXmlElRecordFormat.innerHTML = "BIBFRAME"
 			almaXmlElBib.appendChild(almaXmlElRecordFormat)
-
-
-			let almaXmlElRecord = document.createElement("record");
-
-			for (let el of almaWorksEl){ almaXmlElRecord.appendChild(el) }
-			for (let el of almaInstancesEl){ almaXmlElRecord.appendChild(el) }
-			for (let el of almaItemsEl){ almaXmlElRecord.appendChild(el) }
-
+			// make a child element record of bib
+			let almaXmlElRecord = doc.createElement("record");
+			
+			//rdf tag should be open 
+			let almaXmlElRdf = doc.createElement("rdf:RDF");
+			almaXmlElRdf.setAttribute("xmlns:rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
+					
+			almaXmlElRecord.appendChild(almaXmlElRdf)
 			almaXmlElBib.appendChild(almaXmlElRecord)
-
 			
 
-			let strAlmaXmlElBib = (new XMLSerializer()).serializeToString(almaXmlElBib)
+			
+		
+			for (let el of almaWorksEl){ almaXmlElRdf.appendChild(el) }
+			for (let el of almaInstancesEl){ almaXmlElRdf.appendChild(el) }
+			for (let el of almaItemsEl){ almaXmlElRdf.appendChild(el) }
+			
+			
+
+
+			
+		
+			
+
+			let strAlmaXmlElBib = (new XMLSerializer()).serializeToString(almaXmlElBib)	
 
 
 			// overwrite the existing string with with one
