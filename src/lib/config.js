@@ -11,13 +11,13 @@ const config = {
 	regionUrls: {
 
 		dev:{
-			ldpjs: "https://data.bibframe.app/api-staging/",
-			util: "https://data.bibframe.app/util/",
-			utilLang: "https://data.bibframe.app/util-lang/",
-			publish: "https://data.bibframe.app/util/publish/staging",
+			ldpjs: "http://localhost:3000/ldp/",
+			util: "http://localhost:5001/",
+			utilLang: "http://localhost:5002/",
+			publish: "http://localhost:5001/",
 			bfdb: "https://id.loc.gov/",
-			profiles : 'https://bibframe.org/marva/util/profiles/profile/prod',
-			starting : 'https://bibframe.org/marva/util/profiles/starting/prod',
+			profiles: "/bfe2/editor/profiles.json",
+			starting: "/bfe2/editor/starting.json",
 			env: "staging",
 			publicEndpoints: true,
 			displayLCOnlyFeatures: false

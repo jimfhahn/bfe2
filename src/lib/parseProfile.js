@@ -3726,20 +3726,20 @@ const parseProfile = {
 
         // make a new uri for each one
         if (rt.endsWith(':Work')){
-          uri = 'http://id.loc.gov/resources/works/' + workUriId
+          uri = '_:b1' + workUriId
           workUri = uri
         }else if (rt.endsWith(':Instance')){
        
           // when making a new instance from scratch use the work URI Id peice as the instance ID piece
-          uri = 'http://id.loc.gov/resources/instances/' + workUriId
+          uri =  '_:b2' + workUriId
 
         }else if (rt.endsWith(':Item')){  
-          uri = 'http://id.loc.gov/resources/items/' + translator.toUUID(translator.new())   
+          uri = '_:b3' + translator.toUUID(translator.new())   
         }else if (rt.endsWith(':Hub')){  
-          uri = 'http://id.loc.gov/resources/hubs/' + translator.toUUID(translator.new())   
+          uri = '_:b4' + translator.toUUID(translator.new())   
         }else{
           // dunno what this is give it a random uri
-          uri = 'http://id.loc.gov/resources/unknown/' + translator.toUUID(translator.new())       
+          uri = '_:b5' + translator.toUUID(translator.new())       
         }        
 
         useProfile.rt[rt].URI = uri
