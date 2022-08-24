@@ -53,7 +53,6 @@
           <th>Type</th>
           <th>ID</th>
           <th>Primary contribution</th>
-          <th>LCCN</th>
           <th>User</th>
           <th>Modified</th>
           <th v-if="!allrecords"></th>
@@ -115,7 +114,6 @@
           <th>Type</th>
           <th>ID</th>
           <th>Primary contribution</th>
-          <th>LCCN</th>
           <th>User</th>
           <th>Modified</th>
           <th></th>
@@ -167,7 +165,6 @@
           <th>Type</th>
           <th>ID</th>
           <th>Primary contribution</th>
-          <th>LCCN</th>
           <th>User</th>
           <th>Modified</th>
           <th></th>
