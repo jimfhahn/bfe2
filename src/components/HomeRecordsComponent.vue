@@ -53,6 +53,7 @@
           <th>Type</th>
           <th>ID</th>
           <th>Primary contribution</th>
+          <th>LCCN</th>
           <th>User</th>
           <th>Modified</th>
           <th v-if="!allrecords"></th>
@@ -114,6 +115,7 @@
           <th>Type</th>
           <th>ID</th>
           <th>Primary contribution</th>
+          <th>LCCN</th>
           <th>User</th>
           <th>Modified</th>
           <th></th>
@@ -130,9 +132,8 @@
 
             <td :title="record.status" v-if="record.status=='unposted'">{{record.lccn}}</td>
             <td :title="record.status" v-else-if="record.status=='published'" style="background-color: lawngreen">
-              {{record.lccn}}
               <div v-for="rl in resourceLinks(record)" v-bind:key="rl.url">
-                <a :href="rl.url+'?blastdacache=' + Date.now()" target="_blank">View {{rl.type}} on {{rl.env}}</a>
+                <a :href="'https://data.bibframe.app/api-staging/ldp/' + record.eid" target="_blank">View record</a>
 
               </div>
             </td>
@@ -165,6 +166,7 @@
           <th>Type</th>
           <th>ID</th>
           <th>Primary contribution</th>
+          <th>LCCN</th>
           <th>User</th>
           <th>Modified</th>
           <th></th>
