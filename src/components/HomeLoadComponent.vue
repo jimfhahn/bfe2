@@ -50,9 +50,6 @@
 
 
     </div>
-
-
-
     
 
     <template v-if="config.returnUrls().displayLCOnlyFeatures">
@@ -60,13 +57,13 @@
         <p style="">Go to the <a href="https://preprod-8230.id.loc.gov" target="_blank">BFDB</a> and find an instance to load. Use the editor link button to load into Marva.</p>
     </template>
     <template v-else>
-      <h3>Load data from resource package</h3>
+      <h3>Load data from Alma</h3>
 
 
     </template>
 
     <div>
-      <input style="width: 75%;" class="editor-link-input" ref="urlToLoad" v-model="instanceEditorLink" type="text" id="instance-editor-link" placeholder="Paste Editor Link URL">
+      <input style="width: 75%;" class="editor-link-input" v-model="instanceEditorLink" type="text" id="instance-editor-link" placeholder="Alma MMSID">
     </div>
 
 
@@ -82,7 +79,6 @@
 
         <div style="flex:1; border-right: solid 1px lightgray; margin:5px; padding-right: 5px;">
           
-          <button style="font-size: 1.25em; margin-top: 0.5em;" @click="testInstance()">Suggest Profile</button> 
 
           
 
@@ -139,7 +135,7 @@
         <option v-for="key in rtLookupInstances" :key="key"  :selected="(key === 'lc:RT:bf2:Monograph:Instance') ? true : false"  >{{key}}</option>
       </select>
       <div>
-      <button style="font-size: 1.25em; margin-top: 0.5em;" @click="loadInstance()">Manually Select Profile</button> 
+      <button style="font-size: 1.25em; margin-top: 0.5em;" @click="loadInstance()">Select Profile + Load Record</button> 
       <a href="#" style="color:inherit; margin-left: 1em;" @click.prevent="toggleIsFavorite('profile',instanceSelected)">Add selected to favorites</a>
       </div>
 
@@ -322,7 +318,7 @@ export default {
 
       }
 
-      this.$store.dispatch("fetchBfdbXML", { self: this, url: this.instanceEditorLink }).then(async () => {
+      this.$store.dispatch("fetchBfdbXML", { self: this, url: 'https://data.bibframe.app/alma/' + this.instanceEditorLink + '.xml'}).then(async () => {
         parseBfdb.parse(this.bfdbXML)
         let results = parseBfdb.testProfiles(this.profiles)
         if (results.hardCoded){
@@ -383,7 +379,7 @@ export default {
       if (this.instanceEditorLink==''||this.instanceEditorLink==null){
         this.instanceEditorLink = this.instanceTests[Math.floor(Math.random() * this.instanceTests.length)];
       }    
-      this.$store.dispatch("fetchBfdbXML", { self: this, url: this.instanceEditorLink }).then(async () => {
+      this.$store.dispatch("fetchBfdbXML", { self: this, url: 'https://data.bibframe.app/alma/' + this.instanceEditorLink + '.xml'}).then(async () => {
 
         parseBfdb.parse(this.bfdbXML)
 
@@ -655,7 +651,7 @@ export default {
 
 
 
-        '/bfe2/editor/tests/instances/20898769.editor-pkg.xml', // new production activity
+        '/alma/', // new production activity
 
 
 

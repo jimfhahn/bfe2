@@ -16,8 +16,8 @@ const config = {
 				utilLang: "https://data.bibframe.app/util-lang/",
 				publish: "https://data.bibframe.app/util/publish/staging",
 				bfdb: "https://id.loc.gov/",
-				profiles: "/bfe2/editor/profiles.json",
-				starting: "/bfe2/editor/starting.json",
+				profiles : 'https://bibframe.org/marva/util/profiles/profile/prod',
+				starting : 'https://bibframe.org/marva/util/profiles/starting/prod',
 				env: "production",
 				publicEndpoints: true,
 				displayLCOnlyFeatures: false
