@@ -40,7 +40,7 @@
             <div style="display:flex">
               <div style="flex:1;">{{++idx}}. <span style="font-weight:bold">{{r.label}}</span></div>
               <div style="flex:1"><a :href="r.bfdbURL" target="_blank">View on BFDB</a></div>
-              <div style="flex:1"><a href="#" target="_blank" @click.prevent="instanceEditorLink = r.bfdbPackageURL; testInstance()">Fetch Record</a></div>
+              <div style="flex:1"><a href="#" target="_blank" @click.prevent="instanceEditorLink = r.bfdbPackageURL; testInstance()">Retrieve</a></div>
             </div>
           </li>      
         </template>
@@ -61,6 +61,10 @@
 
 
     </template>
+
+    <div v-if="makingRequest">
+      <h1><span id="loading-icon">⟳</span> Working...</h1>      
+    </div>
 
     <div>
       <input style="width: 75%;" class="editor-link-input" v-model="instanceEditorLink" type="text" id="instance-editor-link" placeholder="Alma MMSID">
@@ -317,7 +321,6 @@ export default {
         this.instanceEditorLink = this.instanceTests[Math.floor(Math.random() * this.instanceTests.length)];
 
       }
-
       this.$store.dispatch("fetchBfdbXML", { self: this, url: 'https://data.bibframe.app/alma/' + this.instanceEditorLink + '.xml'}).then(async () => {
         parseBfdb.parse(this.bfdbXML)
         let results = parseBfdb.testProfiles(this.profiles)
@@ -328,13 +331,6 @@ export default {
             }
             this.suggestHardCoded = results.hardCoded
         }
-        // console.log(results.scoreResults)
-        // HACK - manually exclude some profiles based on keywords in their name
-        results.scoreResults = results.scoreResults.filter((v)=>{return (v.id)})
-        results.scoreResults = results.scoreResults.filter((v)=>{return (!v.id.includes("test"))})
-        results.scoreResults = results.scoreResults.filter((v)=>{return (!v.profile.includes("test"))})
-        results.scoreResults = results.scoreResults.filter((v)=>{return (!v.profile.includes("lc:profile"))})
-        this.suggestScore = results.scoreResults.slice(0, 5)
       })
     },
 
@@ -381,112 +377,118 @@ export default {
       }    
       this.$store.dispatch("fetchBfdbXML", { self: this, url: 'https://data.bibframe.app/alma/' + this.instanceEditorLink + '.xml'}).then(async () => {
 
-        parseBfdb.parse(this.bfdbXML)
-
-        let useProfile = null
-        if (this.instanceSelected && this.instanceSelected.isTemplate){
-          useProfile = JSON.parse(JSON.stringify(this.instanceSelected))
+        if (!this.bfdbXML || this.bfdbXML.substring(0,5) === 'ERROR'){
+          this.makingRequest=false
+          alert("There was an error requesting that record")
+          return false
         }else{
-          // find the right profile to feed it
-          for (let key in this.profiles){
-            if (this.profiles[key].rtOrder.indexOf(this.instanceSelected)>-1){
-              useProfile = JSON.parse(JSON.stringify(this.profiles[key]))
-            }
-          }
+          parseBfdb.parse(this.bfdbXML)
 
-        }
-
-        // we might need to load in a item
-        if (parseBfdb.hasItem>0){ 
-          // loop the number of ITEMS there are in the XML
-          Array.from(Array(parseBfdb.hasItem)).map((_,i) => {
-            let useItemRtLabel
-            // look for the RT for this item
-            if (this.instanceSelected && this.instanceSelected.isTemplate){
-              // we need to build the Rtlabel for what an instance would look like for this template, so we need to find the instance first
-              let instanceRtLabel = this.instanceSelected.rtOrder.filter((v)=>{ return v.includes(':Instance') })[0]
-              useItemRtLabel = instanceRtLabel.replace(':Instance',':Item')
-            }else{
-              useItemRtLabel = this.instanceSelected.replace(':Instance',':Item')
-            }
-            // console.log('looking for useItemRtLabel',useItemRtLabel)
-
-            let foundCorrectItemProfile = false
-
-            for (let pkey in this.profiles){
-              for (let rtkey in this.profiles[pkey].rt){
-                if (rtkey == useItemRtLabel){
-                  let useRtLabel =  useItemRtLabel + '-' + (i+1) 
-                  let useItem = JSON.parse(JSON.stringify(this.profiles[pkey].rt[rtkey]))
-
-                  // make the guids for all the properties unique
-                  for (let ptk in useItem.pt){
-                    useItem.pt[ptk]['@guid'] = short.generate()
-                  }
-
-
-                  // console.log('using',this.profiles[pkey].rt[rtkey])
-                  foundCorrectItemProfile = true
-                  useProfile.rtOrder.push(useRtLabel)
-                  useProfile.rt[useRtLabel] = useItem     
-                  // console.log(JSON.parse(JSON.stringify(useProfile)))           
-                }
+          let useProfile = null
+          if (this.instanceSelected && this.instanceSelected.isTemplate){
+            useProfile = JSON.parse(JSON.stringify(this.instanceSelected))
+          }else{
+            // find the right profile to feed it
+            for (let key in this.profiles){
+              if (this.profiles[key].rtOrder.indexOf(this.instanceSelected)>-1){
+                useProfile = JSON.parse(JSON.stringify(this.profiles[key]))
               }
             }
 
-
-            if (!foundCorrectItemProfile){
-              console.warn('error: foundCorrectItemProfile not set ---------')
-              console.warn(this.rtLookup[useItemRtLabel])
-            }
-          });
-        }
-
-        if (!useProfile.log){
-          useProfile.log = []
-        }
-
-        // setup the log and set the procinfo so the post process knows what to do with this record
-        useProfile.log.push({action:'loadInstance',from:this.instanceEditorLink})
-        useProfile.procInfo= "update instance"
-
-        // also give it an ID for storage
-        if (!useProfile.eId){
-          let uuid = 'e' + decimalTranslator.new()
-          uuid = uuid.substring(0,8)        
-          useProfile.eId= uuid
-
-        }
-
-        if (!useProfile.user){
-          useProfile.user = this.catInitials
-        }
-
-        if (!useProfile.status){
-          useProfile.status = 'unposted'
-        }
-        this.transformResults  = await parseBfdb.transform(useProfile)
-
-        await this.$store.dispatch("setActiveRecordSaved", { self: this}, false)      
-        this.$store.dispatch("clearUndo", { self: this})
-        this.$store.dispatch("setActiveProfile", { self: this, profile: this.transformResults }).then(async () => {
-
-          if (this.settingsDisplayMode == 'spreadsheet'){
-            this.$router.push({ name: 'CompactEdit', params: { recordId: useProfile.eId } })
-          }else{
-            this.$router.push({ name: 'Edit', params: { recordId: useProfile.eId } })
           }
 
-          this.$store.dispatch("setActiveUndo", { self: this, msg:'Loaded record'})
+          // we might need to load in a item
+          if (parseBfdb.hasItem>0){ 
+            // loop the number of ITEMS there are in the XML
+            Array.from(Array(parseBfdb.hasItem)).map((_,i) => {
+              let useItemRtLabel
+              // look for the RT for this item
+              if (this.instanceSelected && this.instanceSelected.isTemplate){
+                // we need to build the Rtlabel for what an instance would look like for this template, so we need to find the instance first
+                let instanceRtLabel = this.instanceSelected.rtOrder.filter((v)=>{ return v.includes(':Instance') })[0]
+                useItemRtLabel = instanceRtLabel.replace(':Instance',':Item')
+              }else{
+                useItemRtLabel = this.instanceSelected.replace(':Instance',':Item')
+              }
+              // console.log('looking for useItemRtLabel',useItemRtLabel)
 
-          // also save it since it now has a perm URL
-          // let xml = await exportXML.toBFXML(this.transformResults)
-          // lookupUtil.saveRecord(xml.xlmStringBasic, useProfile.eId)
-          this.$store.dispatch("forceSave", { self: this}, true).then(() => {
-            this.$store.dispatch("setActiveRecordSaved", { self: this}, true).then(() => {
-            })    
-          })     
-        })
+              let foundCorrectItemProfile = false
+
+              for (let pkey in this.profiles){
+                for (let rtkey in this.profiles[pkey].rt){
+                  if (rtkey == useItemRtLabel){
+                    let useRtLabel =  useItemRtLabel + '-' + (i+1) 
+                    let useItem = JSON.parse(JSON.stringify(this.profiles[pkey].rt[rtkey]))
+
+                    // make the guids for all the properties unique
+                    for (let ptk in useItem.pt){
+                      useItem.pt[ptk]['@guid'] = short.generate()
+                    }
+
+
+                    // console.log('using',this.profiles[pkey].rt[rtkey])
+                    foundCorrectItemProfile = true
+                    useProfile.rtOrder.push(useRtLabel)
+                    useProfile.rt[useRtLabel] = useItem     
+                    // console.log(JSON.parse(JSON.stringify(useProfile)))           
+                  }
+                }
+              }
+
+
+              if (!foundCorrectItemProfile){
+                console.warn('error: foundCorrectItemProfile not set ---------')
+                console.warn(this.rtLookup[useItemRtLabel])
+              }
+            });
+          }
+
+          if (!useProfile.log){
+            useProfile.log = []
+          }
+
+          // setup the log and set the procinfo so the post process knows what to do with this record
+          useProfile.log.push({action:'loadInstance',from:this.instanceEditorLink})
+          useProfile.procInfo= "update instance"
+
+          // also give it an ID for storage
+          if (!useProfile.eId){
+            let uuid = 'e' + decimalTranslator.new()
+            uuid = uuid.substring(0,8)        
+            useProfile.eId= uuid
+
+          }
+
+          if (!useProfile.user){
+            useProfile.user = this.catInitials
+          }
+
+          if (!useProfile.status){
+            useProfile.status = 'unposted'
+          }
+          this.transformResults  = await parseBfdb.transform(useProfile)
+
+          await this.$store.dispatch("setActiveRecordSaved", { self: this}, false)      
+          this.$store.dispatch("clearUndo", { self: this})
+          this.$store.dispatch("setActiveProfile", { self: this, profile: this.transformResults }).then(async () => {
+
+            if (this.settingsDisplayMode == 'spreadsheet'){
+              this.$router.push({ name: 'CompactEdit', params: { recordId: useProfile.eId } })
+            }else{
+              this.$router.push({ name: 'Edit', params: { recordId: useProfile.eId } })
+            }
+
+            this.$store.dispatch("setActiveUndo", { self: this, msg:'Loaded record'})
+            this.makingRequest=false
+            // also save it since it now has a perm URL
+            // let xml = await exportXML.toBFXML(this.transformResults)
+            // lookupUtil.saveRecord(xml.xlmStringBasic, useProfile.eId)
+            this.$store.dispatch("forceSave", { self: this}, true).then(() => {
+              this.$store.dispatch("setActiveRecordSaved", { self: this}, true).then(() => {
+              })    
+            })     
+          })
+        }
       })
     },
 
@@ -600,6 +602,8 @@ export default {
       searchActive: true,
       instanceSelected: 'lc:RT:bf2:Monograph:Instance',
       instanceEditorLink: null,
+
+      makingRequest: false,
 
       // used in lccn search
       lccnToSearch: null,

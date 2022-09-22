@@ -533,6 +533,49 @@ const exportXML = {
 				}
 
 
+				// do some updates to the admin metadata 
+				if (pt.includes('http://id.loc.gov/ontologies/bibframe/adminMetadata')){
+
+					// set the profile used
+					ptObj.userValue['http://id.loc.gov/ontologies/bflc/profile'] = [
+						{
+							'http://id.loc.gov/ontologies/bflc/profile' : rt							
+						}
+					]
+
+					// drop any existing changeDate and add our own
+					try{
+						delete ptObj.userValue['http://id.loc.gov/ontologies/bibframe/changeDate']
+					}catch (e){
+						//
+					}
+
+					// add our own
+					ptObj.userValue['http://id.loc.gov/ontologies/bibframe/changeDate'] = [
+						{
+							'http://id.loc.gov/ontologies/bibframe/changeDate' : new Date().toISOString().split('.')[0]+"Z",
+							'@datatype': 'http://www.w3.org/2001/XMLSchema#dateTime'
+						}
+					]
+
+					// and make a creationdate if it doesn't yet exist
+					if (!ptObj.userValue['http://id.loc.gov/ontologies/bibframe/creationDate']){
+						ptObj.userValue['http://id.loc.gov/ontologies/bibframe/creationDate'] = [
+							{
+								'http://id.loc.gov/ontologies/bibframe/creationDate' : new Date().toISOString().split('.')[0]+"Z",
+								'@datatype': 'http://www.w3.org/2001/XMLSchema#dateTime'
+							}
+						]
+					}
+
+
+					// make sure if its an instance it has a localid
+
+				}
+
+
+
+
 
 				// does it even have any userValues?
 				if (this.hasUserValue(userValue)){
@@ -1024,11 +1067,6 @@ const exportXML = {
 
 			}
 
-			
-
-
-			
-
 			// build the lookup
 
 			tleLookup[rootElName][orginalProfile.rt[rt].URI] = rootEl
@@ -1443,7 +1481,6 @@ const exportXML = {
 			// console.log("strXmlBasic")
 			// console.log(rdfBasic)
 
-
 			// get the various pieces
 			let almaWorksEl =  rdfBasic.getElementsByTagName("bf:Work")
 			let almaInstancesEl =  rdfBasic.getElementsByTagName("bf:Instance")
@@ -1491,8 +1528,17 @@ const exportXML = {
         }
 
 
-
+        // build the BF2MARC package
 		
+		let bf2MarcXmlElRdf = this.createElByBestNS('http://www.w3.org/1999/02/22-rdf-syntax-ns#RDF')
+		// bf2MarcXmlElRdf.setAttribute("xmlns:rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");					
+	
+		for (let el of rdfBasic.getElementsByTagName("bf:Work")){ bf2MarcXmlElRdf.appendChild(el) }
+		for (let el of rdfBasic.getElementsByTagName("bf:Instance")){ bf2MarcXmlElRdf.appendChild(el) }
+		for (let el of rdfBasic.getElementsByTagName("bf:Item")){ bf2MarcXmlElRdf.appendChild(el) }
+		let strBf2MarcXmlElBib = (new XMLSerializer()).serializeToString(bf2MarcXmlElRdf)	
+
+		console.log(strBf2MarcXmlElBib)
 		
 
 
@@ -1500,6 +1546,7 @@ const exportXML = {
 			xmlDom: rdf,
 			xmlStringFormatted: strXmlFormatted,
 			xlmString: strXml,
+			bf2Marc: strBf2MarcXmlElBib,
 			xlmStringBasic: strXmlBasic,
 			voidTitle: xmlVoidDataTitle,
 			voidContributor:xmlVoidDataContributor
