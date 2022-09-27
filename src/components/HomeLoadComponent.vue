@@ -57,8 +57,12 @@
         <p style="">Go to the <a href="https://preprod-8230.id.loc.gov" target="_blank">BFDB</a> and find an instance to load. Use the editor link button to load into Marva.</p>
     </template>
     <template v-else>
-      <h3>Load data from Alma</h3>
-
+      <h3>Load data from
+	<select id="selectron" name="Select data source to load">
+		<option value='https://data.bibframe.app/alma/'>Penn Alma</option>
+		<option value='https://data.bibframe.app/pod/'>IPLC Borrow Direct VuFind</option>
+		<option value='https://data.bibframe.app/svde/'>Share-VDE All Instances</option>
+	</select></h3>
 
     </template>
 
@@ -67,7 +71,7 @@
     </div>
 
     <div>
-      <input style="width: 75%;" class="editor-link-input" v-model="instanceEditorLink" type="text" id="instance-editor-link" placeholder="Alma MMSID">
+      <input style="width: 75%;" class="editor-link-input" v-model="instanceEditorLink" type="text" id="instance-editor-link" placeholder="">
     </div>
 
 
@@ -371,12 +375,9 @@ export default {
     * @return {void}
     */
     loadInstance: async function(){
-      // if not provided load a test one for testing
-      if (this.instanceEditorLink==''||this.instanceEditorLink==null){
-        this.instanceEditorLink = this.instanceTests[Math.floor(Math.random() * this.instanceTests.length)];
-      }    
-      this.$store.dispatch("fetchBfdbXML", { self: this, url: 'https://data.bibframe.app/alma/' + this.instanceEditorLink + '.xml'}).then(async () => {
-
+      let optionValue = document.getElementById("selectron").value;
+      console.log(optionValue);
+      this.$store.dispatch("fetchBfdbXML", { self: this, url: optionValue + this.instanceEditorLink + '.xml'}).then(async () => {
         if (!this.bfdbXML || this.bfdbXML.substring(0,5) === 'ERROR'){
           this.makingRequest=false
           alert("There was an error requesting that record")
