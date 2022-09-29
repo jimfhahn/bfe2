@@ -61,8 +61,7 @@
 	<select id="selectron" name="Select data source to load">
 		<option value='https://data.bibframe.app/alma/'>Penn Alma</option>
 		<option value='https://data.bibframe.app/pod/'>IPLC Borrow Direct VuFind</option>
-		<option value='https://data.bibframe.app/svde/'>Share-VDE All Instances</option>
-	</select></h3>
+		</select></h3>
 
     </template>
 
