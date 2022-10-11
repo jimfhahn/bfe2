@@ -59,9 +59,10 @@
     <template v-else>
       <h3>Load data from
 	<select id="selectron" name="Select data source to load">
-		<option value='https://data.bibframe.app/alma/'>Penn Alma</option>
-		<option value='https://data.bibframe.app/pod/'>IPLC Borrow Direct VuFind</option>
-		</select></h3>
+		<option value='https://data.bibframe.app/alma/'>Penn Alma Production (MMS ID)</option>
+    <option value='https://data.bibframe.app/oclc/'>Worldcat Metadata (OCLC Number)</option>
+		<option value='https://data.bibframe.app/pod/'>IPLC Borrow Direct VuFind (Record ID)</option>
+    </select></h3>
 
     </template>
 
@@ -324,6 +325,7 @@ export default {
         this.instanceEditorLink = this.instanceTests[Math.floor(Math.random() * this.instanceTests.length)];
 
       }
+      // if the link is from data.bibframe.app/instances/ then add .rdf instead of .xml in fetchBfdb
       this.$store.dispatch("fetchBfdbXML", { self: this, url: 'https://data.bibframe.app/alma/' + this.instanceEditorLink + '.xml'}).then(async () => {
         parseBfdb.parse(this.bfdbXML)
         let results = parseBfdb.testProfiles(this.profiles)
