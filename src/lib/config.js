@@ -3,8 +3,8 @@
 const config = {
 
 	versionMajor: 0,
-	versionMinor: 12,
-	versionPatch: 0,
+	versionMinor: 13,
+	versionPatch: 9,
 
 
 
@@ -28,6 +28,7 @@ const config = {
 			ldpjs : 'https://preprod-3001.id.loc.gov/bfe2/api-staging/',
 			util  :  'https://preprod-3001.id.loc.gov/bfe2/util/',			
 			utilLang  :  'https://editor.id.loc.gov/bfe2/util-lang/',
+			scriptshifter: 'https://editor.id.loc.gov/bfe2/scriptshifter/',
 			publish: 'https://preprod-3001.id.loc.gov/bfe2/util/publish/staging',
 			bfdb : 'https://preprod-8230.id.loc.gov/',
 			profiles : '/bfe2/util/profiles/profile/stage',
@@ -44,6 +45,7 @@ const config = {
 			ldpjs : 'https://editor.id.loc.gov/bfe2/api-production/',
 			util  :  'https://editor.id.loc.gov/bfe2/util/',
 			utilLang  :  'https://editor.id.loc.gov/bfe2/util-lang/',
+			scriptshifter  :  'https://editor.id.loc.gov/bfe2/scriptshifter/',
 			publish: 'https://editor.id.loc.gov/bfe2/util/publish/production',
 			bfdb : 'https://preprod-8230.id.loc.gov/',
 			// profiles : 'https://editor.id.loc.gov/api/listconfigs?where=index.resourceType:profile',
@@ -61,6 +63,7 @@ const config = {
 			ldpjs : 'https://bibframe.org/marva/api-production/',
 			util  :  'https://bibframe.org/marva/util/',
 			utilLang  :  'https://bibframe.org/marva/util-lang/',
+			scriptshifter  :  'https://bibframe.org/marva/scriptshifter/',		
 			publish: 'https://bibframe.org/marva/util/publish/production',
 			bfdb : 'https://id.loc.gov/',
 			profiles : 'https://bibframe.org/marva/util/profiles/profile/prod',
@@ -185,6 +188,10 @@ const config = {
 		'http://id.loc.gov/ontologies/bibframe/hasInstance',
 	], 
 
+	// used in parseProfile isUriALiteral()
+	isLiteral: [
+		'http://www.w3.org/2000/01/rdf-schema#Literal'
+	],
 
 
 
@@ -391,6 +398,20 @@ const config = {
 			}
 		]},
 
+
+		
+
+		"https://preprod-8080.id.loc.gov/resources/hubs" : {"name":"Hubs", "processor" : 'lcAuthorities', "type":"complex", "modes":[
+			{
+
+
+
+			"Hubs - Keyword":{"url":"https://preprod-8080.id.loc.gov/resources/hubs/suggest2/?q=?<QUERY>&count=25","all":true}, 					
+
+			"Hubs - Left Anchored":{"url":"https://preprod-8080.id.loc.gov/resources/hubs/suggest2/?q=<QUERY>&count=25"}, 				
+			
+			}
+		]},
 
 
 		"https://preprod-8080.id.loc.gov/resources/instances" : {"name":"Instances", "processor" : 'lcAuthorities', "type":"complex", "modes":[

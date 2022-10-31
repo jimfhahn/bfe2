@@ -6,7 +6,23 @@
 
   <div v-if="dynamic == 'singleTemplate'">
 
-    <EditMainComponent  v-for="(pt,idx) in activeTemplate.propertyTemplates" :ptGuid="ptGuid" :isMini="isMini" :key="idx" :position="idx" :activeTemplate="Object.assign({nested:true},activeTemplate)" :structure="activeTemplate.propertyTemplates[idx]" :profileCompoent="profileCompoent" :profileName="profileName" :grandParentStructureObj="parentStructureObj" :parentStructureObj="structure" :parentStructure="['nothing']"  :nested="true"></EditMainComponent>
+    <EditMainComponent  v-for="(pt,idx) in activeTemplate.propertyTemplates" 
+      :level="level"
+      :bnodeProperty="bnodeProperty" 
+      :propertyPath="propertyPath"
+      :ptGuid="ptGuid" 
+      :isMini="isMini" 
+      :key="idx" 
+      :position="idx" 
+      :activeTemplate="Object.assign({nested:true},activeTemplate)" 
+      :structure="activeTemplate.propertyTemplates[idx]" 
+      :profileCompoent="profileCompoent" 
+      :profileName="profileName" 
+      :grandParentStructureObj="parentStructureObj" 
+      :parentStructureObj="structure" 
+      :parentStructure="['nothing']"  
+      :nested="true">    
+    </EditMainComponent>
 
 
   </div>
@@ -34,7 +50,21 @@
         <!-- <EditMainComponent name="pt." v-for="pt in this.activeTemplate.propertyTemplates" v-bind:key="pt" v-bind:structure="pt"></EditMainComponent> -->
         <!-- <EditMainComponent name="yeet"></EditMainComponent> -->
 
-        <EditMainComponent  v-for="(pt,idx) in activeTemplate.propertyTemplates" :ptGuid="ptGuid" :key="idx" :isMini="isMini" :activeTemplate="activeTemplate" :structure="activeTemplate.propertyTemplates[idx]" :parentStructureObj="structure" :parentStructure="['nothing']" :profileCompoent="profileCompoent" :profileName="profileName" :nested="true"></EditMainComponent>
+        <EditMainComponent  v-for="(pt,idx) in activeTemplate.propertyTemplates" 
+        :level="level" 
+        :bnodeProperty="bnodeProperty"
+        :propertyPath="propertyPath"
+        :ptGuid="ptGuid" 
+        :key="idx" 
+        :isMini="isMini" 
+        :activeTemplate="activeTemplate" 
+        :structure="activeTemplate.propertyTemplates[idx]" 
+        :parentStructureObj="structure" 
+        :parentStructure="['nothing']" 
+        :profileCompoent="profileCompoent" 
+        :profileName="profileName" 
+        :nested="true">
+        </EditMainComponent>
       </div>
       <div v-else>
         <span>Missing resource template {{structure.valueConstraint.valueTemplateRefs}}</span>
@@ -64,7 +94,23 @@
         <!-- <EditMainComponent name="yeet"></EditMainComponent> -->
 
 
-        <EditMainComponent  v-for="(pt,idx) in activeTemplate.propertyTemplates" :ptGuid="ptGuid"  :key="idx" :isMini="isMini" :position="idx" :activeTemplate="Object.assign({nested:true},activeTemplate)" :structure="activeTemplate.propertyTemplates[idx]" :profileCompoent="profileCompoent" :profileName="profileName" :grandParentStructureObj="parentStructureObj" :parentStructureObj="structure" :parentStructure="['nothing']"  :nested="true"></EditMainComponent>
+        <EditMainComponent  v-for="(pt,idx) in activeTemplate.propertyTemplates" 
+          :ptGuid="ptGuid"  
+          :level="level" 
+          :bnodeProperty="bnodeProperty"
+          :propertyPath="propertyPath"
+          :key="idx" 
+          :isMini="isMini" 
+          :position="idx" 
+          :activeTemplate="Object.assign({nested:true},activeTemplate)" 
+          :structure="activeTemplate.propertyTemplates[idx]" 
+          :profileCompoent="profileCompoent" 
+          :profileName="profileName" 
+          :grandParentStructureObj="parentStructureObj" 
+          :parentStructureObj="structure" 
+          :parentStructure="['nothing']"  
+          :nested="true">          
+        </EditMainComponent>
       </template>
 
   </div>
@@ -107,7 +153,11 @@ export default {
     nested: Boolean,
     isMini: Boolean,
     dynamic: String,
-    ptGuid: String
+    ptGuid: String,
+    level: Number,
+    bnodeProperty: String,
+    propertyPath: Array,
+
   },  
   data: function() {
     return {
@@ -117,7 +167,8 @@ export default {
       activeTemplate: null,
       propertyTemplatesOrderLookup: {},
       propertyTemplatesOrderTypeLookup: {},
-      labels: labels
+      labels: labels,
+      internalAssignID:false,
 
     }
   },
@@ -129,7 +180,14 @@ export default {
 
 
     assignedId (){
-      return uiUtils.assignID(this.structure,this.parentStructure)
+      
+      // return uiUtils.assignID(this.structure,this.parentStructure)
+      if (this.internalAssignID){
+        return this.internalAssignID
+      }else{
+        this.internalAssignID = uiUtils.assignID(this.structure,this.parentStructure)
+        return this.internalAssignID
+      }           
     },  
 
 
@@ -158,11 +216,15 @@ export default {
     // grab the first component from the struecture, but there might be mutluple ones
     let useId = this.structure.valueConstraint.valueTemplateRefs[0]
     let foundBetter = false
+    
+    let userValue = this.structure.userValue
 
-
+    if (userValue[this.structure.propertyURI] && userValue[this.structure.propertyURI][0]){
+      userValue = this.structure.userValue[this.structure.propertyURI][0]
+    }
     
     // do we have user data and a possible @type to use
-    if (this.structure.userValue['@type'] || (this.parentStructureObj && this.parentStructureObj.userValue['@type'])){
+    if (userValue['@type'] || (this.parentStructureObj && this.parentStructureObj.userValue['@type'])){
 
 
       // loop thrugh all the refs and see if there is a URI that matches it better
@@ -171,15 +233,15 @@ export default {
 
         if (foundBetter) return false
 
-        if (this.rtLookup[tmpid].resourceURI === this.structure.userValue['@type']){
+        if (this.rtLookup[tmpid].resourceURI === userValue['@type']){
           useId = tmpid
           foundBetter = true
         }
 
-        for (let key in this.structure.userValue){
+        for (let key in userValue){
 
-          if (Array.isArray(this.structure.userValue[key])){
-            for (let val of this.structure.userValue[key]){
+          if (Array.isArray(userValue[key])){
+            for (let val of userValue[key]){
               if (val['@type'] && this.rtLookup[tmpid].resourceURI === val['@type']){
                 useId = tmpid
                 foundBetter = true
@@ -192,19 +254,19 @@ export default {
         }
 
         // also look into the parent that might have the data
-        if (this.parentStructureObj){
-          for (let key in this.parentStructureObj.userValue){
-            if (Array.isArray(this.parentStructureObj.userValue[key])){
-              for (let val of this.parentStructureObj.userValue[key]){
-                if (val['@type'] && this.rtLookup[tmpid].resourceURI === val['@type']){
-                  useId = tmpid
-                  foundBetter = true
-                }
-              }
-            }
+        // if (this.parentStructureObj){
+        //   for (let key in this.parentStructureObj.userValue){
+        //     if (Array.isArray(this.parentStructureObj.userValue[key])){
+        //       for (let val of this.parentStructureObj.userValue[key]){
+        //         if (val['@type'] && this.rtLookup[tmpid].resourceURI === val['@type']){
+        //           useId = tmpid
+        //           foundBetter = true
+        //         }
+        //       }
+        //     }
 
-          }
-        }
+        //   }
+        // }
 
 
 
@@ -346,7 +408,7 @@ export default {
         this.$store.dispatch("refTemplateChange", { self: this, profileName:this.profileName, profileComponet: this.profileCompoent, structure: this.structure, template:this.activeTemplate, parentId: this.structure.parentId, nextRef:this.rtLookup[nextRefID], thisRef: this.rtLookup[currentRefID] }).then(() => {
          
           let nextRef = JSON.parse(JSON.stringify(this.rtLookup[nextRefID]))
-          console.log(nextRef)
+          
           this.multiTemplateSelect = nextRef.resourceLabel
           this.multiTemplateSelectURI = nextRefID
           this.activeTemplate = nextRef

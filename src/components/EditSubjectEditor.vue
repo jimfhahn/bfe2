@@ -732,8 +732,8 @@ export default {
       that.x = 'Seaching...'
       that.pickPostion=0
 
-      searchString = searchString.trim()
-      searchStringFull = searchStringFull.trim()
+      searchString = searchString.trim().normalize()
+      searchStringFull = searchStringFull.trim().normalize()
 
       // make the "searching..." text grow
       let ti = window.setInterval(()=>{ that.activeSearch = ((!that.activeSearch) ? '' : that.activeSearch) + '.'},100)
@@ -1658,7 +1658,7 @@ export default {
       this.showTypes= false
 
 
-      
+
 
       if (!userValue){
         return
@@ -1689,7 +1689,9 @@ export default {
       // }
 
 
-
+      if (userValue['http://id.loc.gov/ontologies/bibframe/subject'] && userValue['http://id.loc.gov/ontologies/bibframe/subject'][0]){
+        userValue = userValue['http://id.loc.gov/ontologies/bibframe/subject'][0]
+      }
 
 
       let completeLabel = null

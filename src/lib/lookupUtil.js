@@ -8,7 +8,8 @@ const lookupUtil = {
 
     possibleLabelURIs: [
         'http://www.loc.gov/mads/rdf/v1#authoritativeLabel',
-        'http://www.w3.org/2004/02/skos/core#prefLabel'
+        'http://www.w3.org/2004/02/skos/core#prefLabel',
+        'http://www.w3.org/2000/01/rdf-schema#label'
     ],
 
 
@@ -113,6 +114,7 @@ const lookupUtil = {
                     this.possibleLabelURIs.forEach((labelURI)=>{
                         // if it has this label URI and does not yet have a label
                         if (d[labelURI] && !dataProcessed[d['@id']]){
+
                             label = this.returnValue(d[labelURI])
 
                             let labelWithCode = []
@@ -253,6 +255,16 @@ const lookupUtil = {
       return fetch(config.returnUrls().utilLang+'romanize').then(response => response.json())
 
     },
+
+    supportedScriptShifter: async function(){
+
+      return fetch(config.returnUrls().scriptshifter+'languages').then(response => response.json())
+
+    },
+
+
+
+
 
 
     userTemplates: async function(user){
@@ -1801,6 +1813,7 @@ const lookupUtil = {
 
       let regexResults
 
+      lcsh = lcsh.normalize()
 
       if (!lcsh){
         result.resultType = 'ERROR'
@@ -1810,6 +1823,7 @@ const lookupUtil = {
         result.msg = 'REGEX Error: That value doesn\'t look like a valid MARC encoded LCSH string (not string)'
       }
 
+      lcsh=lcsh.replace(/\$c/g,'').replace(/\$d/g,'').replace(/‡c/g,'').replace(/‡d/g,'').replace(/\s{2,}/g, ' ')
 
       // if it doesn't have a $a or ‡a in the start of the string add it
       // often times copying from a system they dont include the $a 

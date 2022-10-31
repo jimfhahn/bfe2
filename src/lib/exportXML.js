@@ -5,8 +5,24 @@ import parseProfile from "./parseProfile";
 import config from "./config";
 
 
+// we will use the built in DOMParser() in the browser 
+// but when unit tests are run it will use the jsdom module 
+const returnDOMParser = function(){
+	let p
+	try{
+		p = new DOMParser();
+	}catch(error){
+		// const jsdom = require("jsdom");
+		// const { JSDOM } = jsdom;
+		// const { window } = new JSDOM(`<!DOCTYPE html><p>Hello world</p>`);
+		p = new window.DOMParser();
+	}	
+	return p
+}
 
-const parser = new DOMParser();
+
+
+const parser = returnDOMParser()
 
 
 const exportXML = {
@@ -75,7 +91,6 @@ const exportXML = {
 	createElByBestNS: function(elStr){
 
 
-
 		// HACK - bad marc2bf conversion
 		if (elStr == 'http://www.loc.gov/mads/rdf/v1#'){
 			elStr = 'http://www.loc.gov/mads/rdf/v1#Authority'
@@ -115,9 +130,12 @@ const exportXML = {
 	},
 
 
-	suggestType: async function(propertyURI){
+	suggestType: async function(propertyURI, resourceTemplateId){
 
-
+		if (!resourceTemplateId){
+			resourceTemplateId=false
+		}
+		
 		let result = false
 
 
@@ -125,6 +143,20 @@ const exportXML = {
 		if (propertyURI==='http://www.w3.org/2000/01/rdf-schema#label'){
 			return 'http://www.w3.org/2000/01/rdf-schema#Literal'
 		}
+		if (propertyURI==='http://www.loc.gov/mads/rdf/v1#authoritativeLabel'){
+			return 'http://www.w3.org/2000/01/rdf-schema#Literal'
+		}
+
+		if (propertyURI==='http://www.w3.org/1999/02/22-rdf-syntax-ns#value'){
+			return 'http://www.w3.org/2000/01/rdf-schema#Literal'
+		}
+		if (propertyURI==='http://www.loc.gov/mads/rdf/v1#componentList'){
+			return 'http://www.w3.org/1999/02/22-rdf-syntax-ns#List'
+		}
+
+		
+
+		
 
 
 		// at this point we have a well cached lookup of the whole onotlogy in localstorage
@@ -132,6 +164,7 @@ const exportXML = {
 		let propXml = await lookupUtil.fetchOntology(propertyURI)
 		let prop = parser.parseFromString(propXml, "text/xml");
 		let range = prop.getElementsByTagName("rdfs:range")
+
 
 		// if it has a range return it
 		if (range.length>0){
@@ -141,7 +174,7 @@ const exportXML = {
 			}
 		}
 
-		let profileLookup = parseProfile.suggestType(propertyURI)
+		let profileLookup = parseProfile.suggestType(propertyURI,resourceTemplateId)
 		if (profileLookup != false){
 			result = profileLookup
 		}
@@ -181,6 +214,18 @@ const exportXML = {
 			result = 'http://www.w3.org/2000/01/rdf-schema#Literal'
 		}
 
+
+
+		// Remove these when BFLC ontology is updated
+		if (propertyURI==='http://id.loc.gov/ontologies/bflc/simplePlace'){
+			result = 'http://www.w3.org/2000/01/rdf-schema#Literal'
+		}
+		if (propertyURI==='http://id.loc.gov/ontologies/bflc/simpleAgent'){
+			result = 'http://www.w3.org/2000/01/rdf-schema#Literal'
+		}
+		if (propertyURI==='http://id.loc.gov/ontologies/bflc/simpleDate'){
+			result = 'http://www.w3.org/2000/01/rdf-schema#Literal'
+		}
 
 		if (result===false){
 			console.warn('Could not @type this ',propertyURI)
@@ -275,7 +320,7 @@ const exportXML = {
 
 	debug: function(uri, msg, userValue, other1, other2, other3){
 
-		let print = false
+		let print = true
 
 		if(print){
 			console.log(uri, msg, userValue, other1, other2, other3)
@@ -387,6 +432,7 @@ const exportXML = {
 	},
 
 	createLiteral: function(property,userValue){
+
 
 
 		let p = this.createElByBestNS(property)
@@ -525,8 +571,19 @@ const exportXML = {
 			for (let pt of profile.rt[rt].ptOrder){
 
 				let ptObj = profile.rt[rt].pt[pt]
+				
+				let userValue
 
-				let userValue = ptObj.userValue
+				if (ptObj.userValue[ptObj.propertyURI] && ptObj.userValue[ptObj.propertyURI][0]){
+					userValue = ptObj.userValue[ptObj.propertyURI][0] 				
+				}else if (ptObj.userValue[ptObj.propertyURI]){
+					userValue = ptObj.userValue[ptObj.propertyURI]
+				}else{
+					userValue = ptObj.userValue 	
+				}
+
+
+				
 
 				if (this.ignoreProperties.indexOf(ptObj.propertyURI) > -1){
 					continue
@@ -536,8 +593,10 @@ const exportXML = {
 				// do some updates to the admin metadata 
 				if (pt.includes('http://id.loc.gov/ontologies/bibframe/adminMetadata')){
 
+					let adminData = ptObj.userValue['http://id.loc.gov/ontologies/bibframe/adminMetadata'][0]
+
 					// set the profile used
-					ptObj.userValue['http://id.loc.gov/ontologies/bflc/profile'] = [
+					adminData['http://id.loc.gov/ontologies/bflc/profile'] = [
 						{
 							'http://id.loc.gov/ontologies/bflc/profile' : rt							
 						}
@@ -545,13 +604,13 @@ const exportXML = {
 
 					// drop any existing changeDate and add our own
 					try{
-						delete ptObj.userValue['http://id.loc.gov/ontologies/bibframe/changeDate']
+						delete adminData['http://id.loc.gov/ontologies/bibframe/changeDate']
 					}catch (e){
 						//
 					}
 
 					// add our own
-					ptObj.userValue['http://id.loc.gov/ontologies/bibframe/changeDate'] = [
+					adminData['http://id.loc.gov/ontologies/bibframe/changeDate'] = [
 						{
 							'http://id.loc.gov/ontologies/bibframe/changeDate' : new Date().toISOString().split('.')[0]+"Z",
 							'@datatype': 'http://www.w3.org/2001/XMLSchema#dateTime'
@@ -559,8 +618,8 @@ const exportXML = {
 					]
 
 					// and make a creationdate if it doesn't yet exist
-					if (!ptObj.userValue['http://id.loc.gov/ontologies/bibframe/creationDate']){
-						ptObj.userValue['http://id.loc.gov/ontologies/bibframe/creationDate'] = [
+					if (!adminData['http://id.loc.gov/ontologies/bibframe/creationDate']){
+						adminData['http://id.loc.gov/ontologies/bibframe/creationDate'] = [
 							{
 								'http://id.loc.gov/ontologies/bibframe/creationDate' : new Date().toISOString().split('.')[0]+"Z",
 								'@datatype': 'http://www.w3.org/2001/XMLSchema#dateTime'
@@ -580,7 +639,7 @@ const exportXML = {
 				// does it even have any userValues?
 				if (this.hasUserValue(userValue)){
 
-
+					console.log("Doing export on",pt,userValue)
 
 					// keep track of what resource teplates we used in this record
 					if (xmlVoidDataRtsUsed.indexOf(rt)==-1){
@@ -890,21 +949,35 @@ const exportXML = {
 							// its just a top level literal property
 							// loop through its keys and make the values
 							for (let key1 of Object.keys(userValue).filter(k => (!k.includes('@') ? true : false ) )){
+								console.log('userValue',userValue)
+								console.log('key1',key1)
+								console.log("userValue[key1]",userValue[key1])
+								// are we at the right level?
+								if (typeof userValue[key1] === 'string' || typeof userValue[key1] === 'number'){
+												
+									let p1 = this.createLiteral(key1, userValue)
+									console.log("p1",p1)
+									if (p1!==false) rootEl.appendChild(p1);
 
-								for (let value1 of userValue[key1]){
 
-									for (let key2 of Object.keys(value1).filter(k => (!k.includes('@') ? true : false ) )){
+								}else{
 
-										if (typeof value1[key2] == 'string' || typeof value1[key2] == 'number'){
-											// its a label or some other literal
-											let p1 = this.createLiteral(key2, value1)
-											if (p1!==false) rootEl.appendChild(p1);
-										}else{
-											console.error('key2', key2, value1[key2], 'not a literal, should not happen')
+									for (let value1 of userValue[key1]){
+										for (let key2 of Object.keys(value1).filter(k => (!k.includes('@') ? true : false ) )){
+
+											if (typeof value1[key2] == 'string' || typeof value1[key2] == 'number'){
+												// its a label or some other literal
+												let p1 = this.createLiteral(key2, value1)
+												if (p1!==false) rootEl.appendChild(p1);
+											}else{
+												console.error('key2', key2, value1[key2], 'not a literal, should not happen')
+											}
 										}
-
 									}
+
 								}
+
+
 
 							}
 						
@@ -1038,7 +1111,7 @@ const exportXML = {
 
 			if (orginalProfile.rt[rt].unusedXml){
 				
-				let parser = new DOMParser();
+				let parser = returnDOMParser()
 
 
 
@@ -1081,7 +1154,7 @@ const exportXML = {
 
 		// also just build a basic version tosave
 
-		let parser = new DOMParser();
+		let parser = returnDOMParser()
 
 		
 		for (let URI in tleLookup['Work']){
@@ -1562,7 +1635,7 @@ const exportXML = {
 	returnHasItem: function(URI,profile,tleLookup){
 
 		let results = []
-		let parser = new DOMParser();
+		let parser = returnDOMParser()
 
 		for (let rt in profile.rt){
 
@@ -1603,7 +1676,7 @@ const exportXML = {
 
 	},
 	returnWorkFromInstance: function(instanceURI,profile,tleLookup){
-		let parser = new DOMParser();
+		let parser = returnDOMParser()
 
 		let results = null
 

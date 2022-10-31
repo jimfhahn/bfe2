@@ -475,7 +475,8 @@ export default {
           this.$store.dispatch("setActiveProfile", { self: this, profile: this.transformResults }).then(async () => {
 
             if (this.settingsDisplayMode == 'spreadsheet'){
-              this.$router.push({ name: 'CompactEdit', params: { recordId: useProfile.eId } })
+              // this.$router.push({ name: 'CompactEdit', params: { recordId: useProfile.eId } })
+              this.$router.push({ name: 'Edit', params: { recordId: useProfile.eId } })
             }else{
               this.$router.push({ name: 'Edit', params: { recordId: useProfile.eId } })
             }
@@ -635,6 +636,9 @@ export default {
 
 
         // '/bfe2/editor/tests/instances/21533302.editor-pkg.xml', // subject editing test
+
+
+        '/bfe2/editor/tests/instances/22812924.editor-pkg.xml', // subject editing test
 
 
 
