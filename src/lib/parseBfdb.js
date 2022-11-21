@@ -2,6 +2,8 @@
 // const jsdom = require("jsdom");
 import store from "../store";
 const short = require('short-uuid');
+import lookupUtil from "./lookupUtil";
+
 import config from "./config"
 
 const hashCode = s => s.split('').reduce((a,b) => (((a << 5) - a) + b.charCodeAt(0))|0, 0)
@@ -592,8 +594,8 @@ const parseBfdb = {
 		// restore the RTlookups so we are starting from a clean state
 		store.state.rtLookup = JSON.parse(JSON.stringify(store.state.rtLookupUnmodified))
 
-		console.log("********")
-		console.log(JSON.parse(JSON.stringify(profile)))
+		// console.log("********")
+		// console.log(JSON.parse(JSON.stringify(profile)))
 
 		// remove any non top level entities from the profile, this can be if they are defined and used in the same profile,
 		// we don't want to parse anything ecept HUB WORK INSTANCE ITEM
@@ -669,7 +671,6 @@ const parseBfdb = {
 		// so looop through the children of rdf:RDF
 		let instanceCount = 0
 		for (let el of this.activeDom.children[0].children){
-			console.log('-->',el.tagName)
 			if (el.tagName=='bf:Instance'){
 				instanceCount++
 			}
@@ -1052,7 +1053,8 @@ const parseBfdb = {
 		let results = await this.transformRts(profile)
 
 
-
+		// save a backup copy as well
+		lookupUtil.sendSourceRecord(this.xmlSource,profile.eId, profile.user)
 
 
 		// console.log('-------------------HERE---------------------xxx')
@@ -1117,6 +1119,9 @@ const parseBfdb = {
 			}else{
 				xml = this.activeDom.getElementsByTagName(tle)
 			}
+
+			// store this here for easy access to the error report
+			profile.xmlSource = this.xmlSource
 			
 			
 			// only return the top level, no nested related things
@@ -2891,6 +2896,7 @@ const parseBfdb = {
 			xml = this.testXml
 		}	
 
+		this.xmlSource = xml
 
 
 
