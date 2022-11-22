@@ -35,7 +35,7 @@ const parseBfdb = {
 		'rdfs':'http://www.w3.org/2000/01/rdf-schema#',
 		'rdf' : 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
 		'lclocal':'http://id.loc.gov/ontologies/lclocal/', 		
-		'pmo' :'http://performedmusicontology.org/ontology/',
+		'pmo' :'https://performedmusicontology.org/ontology/',
 		'datatypes': 'http://id.loc.gov/datatypes/',
 		'xsd': 'http://www.w3.org/2001/XMLSchema#',
 		'mstatus': 'https://id.loc.gov/vocabulary/mstatus/',
