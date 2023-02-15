@@ -1,10 +1,9 @@
 
-
 const config = {
 
 	versionMajor: 0,
 	versionMinor: 13,
-	versionPatch: 13,
+	versionPatch: 14,
 
 	regionUrls: {
 
@@ -32,7 +31,7 @@ const config = {
 			publish: 'https://preprod-3001.id.loc.gov/bfe2/util/publish/staging',
 			bfdb : 'https://preprod-8230.id.loc.gov/',
 			profiles : '/bfe2/util/profiles/profile/stage',
-			// profiles: 'https://preprod-3001.id.loc.gov/api/listconfigs?where=index.resourceType:profile',
+			//profiles: 'https://preprod-3001.id.loc.gov/api/listconfigs?where=index.resourceType:profile',
 			starting : '/bfe2/util/profiles/starting/stage',
 			id: 'https://preprod-8080.id.loc.gov/',
 			env : 'staging',
@@ -279,6 +278,19 @@ const config = {
 				}
 			]
 		},
+		
+		"http://id.loc.gov/authorities/geographics" : {
+			"name":"geographics", 
+			"type":"complex", 
+			"processor" : 'lcAuthorities',
+			"modes":[
+				{
+					'LCNAF Geographic':{"url":"https://id.loc.gov/authorities/names/suggest2/?q=<QUERY>&rdftype=Geographic&memberOf=http://id.loc.gov/authorities/names/collection_NamesAuthorizedHeadings&count=25"},
+					'LCSH Geographic':{"url":"https://id.loc.gov/authorities/subjects/suggest2/?q=<QUERY>&rdftype=Geographic&memberOf=http://id.loc.gov/authorities/subjects/collection_LCSHAuthorizedHeadings&count=25"},
+					'GACS':{"url":"https://id.loc.gov/vocabulary/geographicAreas/suggest2/?q=<QUERY>&rdftype=Geographic&count=25"},
+				}
+			]
+		},
 
 
 		"HierarchicalGeographic": {
@@ -288,7 +300,8 @@ const config = {
 
 			"modes":[
 				{
-					'All':{"url":"https://preprod-8288.id.loc.gov/authorities/names/suggest2/?q=<QUERY>&count=25&rdftype=HierarchicalGeographic", "all":true}, 					
+					// 'All':{"url":"https://preprod-8288.id.loc.gov/authorities/names/suggest2/?q=<QUERY>&count=25&rdftype=HierarchicalGeographic", "all":true}, 					
+					'All':{"url":"https://id.loc.gov/authorities/suggest2/?q=<QUERY>&rdftype=HierarchicalGeographic&count=25", "all":true},
 				}
 			]
 		},
