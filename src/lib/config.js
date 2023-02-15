@@ -13,7 +13,8 @@ const config = {
 				util: "https://data.bibframe.app/util/",
 				utilLang: "https://data.bibframe.app/util-lang/",
 				scriptshifter  :  'https://data.bibframe.app/scriptshifter/',
-				publish: "https://data.bibframe.app/util/publish/staging",
+				publish: "https://data.bibframe.app/util/publish/production",
+				// util is setup to send BFXML to alma if /staging, and send Enriched MARCXML to alma if /production
 				bfdb: "https://id.loc.gov/",
 				profiles : 'https://bibframe.org/marva/util/profiles/profile/prod',
 				starting : 'https://bibframe.org/marva/util/profiles/starting/prod',
@@ -120,7 +121,7 @@ const config = {
 
 
 
-	postUsingAlmaXmlFormat: true,
+	postUsingAlmaXmlFormat: false,
 
 
 
