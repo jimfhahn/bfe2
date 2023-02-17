@@ -1616,9 +1616,14 @@ export default {
       window.clearTimeout(this.selectNavTimeout)
       this.selectNavTimeout = window.setTimeout(()=>{
 
+//fix arrow function
 
-        event.target.options.forEach((o)=>{
-          if (o.selected){
+        this.$store.dispatch("setActiveInput", { self: this, id: event.target.id, profileCompoent: this.profileCompoent, profileName: this.profileName }).then(()=>{
+          // just make sure the parent input is focused if they clicked "edit" without it being focused
+
+
+          let o = event.target.options[event.target.selectedIndex]
+          if (o){
 
             // remove the context because we're about to get a new one
             this.$store.dispatch("clearContext", { self: this})            

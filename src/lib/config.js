@@ -8,16 +8,17 @@ const config = {
 	regionUrls: {
 
 		dev:{
-				ldpjs: "https://data.bibframe.app/api-staging/",
-				util: "https://data.bibframe.app/util/",
-				utilLang: "https://data.bibframe.app/util-lang/",
+				ldpjs: 'https://data.bibframe.app/api-staging/',
+				util: 'https://data.bibframe.app/util/',
+				utilLang: 'https://data.bibframe.app/util-lang/',
 				scriptshifter  :  'https://data.bibframe.app/scriptshifter/',
-				publish: "https://data.bibframe.app/util/publish/production",
+				publish: 'https://data.bibframe.app/util/publish/production/',
 				// util is setup to send BFXML to alma if /staging, and send Enriched MARCXML to alma if /production
-				bfdb: "https://id.loc.gov/",
-				profiles : 'https://bibframe.org/marva/util/profiles/profile/prod',
-				starting : 'https://bibframe.org/marva/util/profiles/starting/prod',
-				env: "production",
+				bfdb: 'https://id.loc.gov/',
+				id: 'https://id.loc.gov/',
+				profiles: 'https://data.bibframe.app/bfe2/editor/new-profiles.json',
+				starting: 'https://data.bibframe.app/bfe2/editor/new-starting.json',
+				env: 'production',
 				publicEndpoints: true,
 				displayLCOnlyFeatures: false
 				},
@@ -80,8 +81,8 @@ const config = {
 			scriptshifter  :  'https://data.bibframe.app/scriptshifter/',
 			publish: "https://data.bibframe.app/util/publish/staging",
 			bfdb: "https://id.loc.gov/",
-			profiles: "/bfe2/editor/profiles.json",
-			starting: "/bfe2/editor/starting.json",
+			profiles: "https://data.bibframe.app/bfe2/editor/profiles.json",
+			starting: "https://data.bibframe.app/bfe2/editor/starting.json",
 			env: "production",
 			publicEndpoints: true,
 			displayLCOnlyFeatures: false
