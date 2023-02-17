@@ -81,8 +81,9 @@ const config = {
 			scriptshifter  :  'https://data.bibframe.app/scriptshifter/',
 			publish: "https://data.bibframe.app/util/publish/staging",
 			bfdb: "https://id.loc.gov/",
-			profiles: "https://data.bibframe.app/bfe2/editor/profiles.json",
-			starting: "https://data.bibframe.app/bfe2/editor/starting.json",
+			profiles: "https://data.bibframe.app/bfe2/editor/new-profiles.json",
+			starting: "https://data.bibframe.app/bfe2/editor/new-starting.json",
+			id: 'https://id.loc.gov/',
 			env: "production",
 			publicEndpoints: true,
 			displayLCOnlyFeatures: false

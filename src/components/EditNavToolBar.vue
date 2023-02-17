@@ -946,13 +946,9 @@ button[disabled]{
 
 
               <div v-if="showPostModalErrorMsg" style="max-height: 500px; overflow-x:auto; overflow-y:auto;">
-                <div style="font-weight: bold; color: red">We were unable to post the record. Please report this error.</div>
-                <div>Full Response</div>
-                <pre>
-                  <code>
-                    {{JSON.stringify(showPostModalErrorMsg,null,2)}}
-                  </code>
-                </pre>
+                <div style="font-weight: bold; color: green"> The record was accepted by the system. </div>
+                <div>MMSID: {{(showPostModalErrorMsg.message)}}</div>
+
                 
                 <template v-if="showPostModalErrorMsg && showPostModalErrorMsg.message && showPostModalErrorMsg.message.message">
                     <hr>
@@ -991,8 +987,9 @@ button[disabled]{
 
 
 
-              <div v-if="resourceLinks.length>0" style="margin: 0.5em 0 0.5em 0;background-color: #90ee9052;padding: 0.5em;border-radius: 0.25em;">
-                The record was accepted by the system.
+              <div v-if="resourceLinks.length>16" style="margin: 0.5em 0 0.5em 0;background-color: #90ee9052;padding: 0.5em;border-radius: 0.25em;">
+                The record was accepted by the system. MMSID: {{cleanUpErrorResponse(showPostModalErrorMsg.message.error)}}
+
               </div>
               
 
