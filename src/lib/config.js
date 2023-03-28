@@ -3,23 +3,22 @@ const config = {
 
 	versionMajor: 0,
 	versionMinor: 13,
-	versionPatch: 14,
+	versionPatch: 15,
 
 	regionUrls: {
 
 		dev:{
-				ldpjs: 'https://data.bibframe.app/api-staging/',
-				util: 'https://data.bibframe.app/util/',
-				utilLang: 'https://data.bibframe.app/util-lang/',
-				scriptshifter  :  'https://data.bibframe.app/scriptshifter/',
-				publish: 'https://data.bibframe.app/util/publish/production/',
-				// util is setup to send BFXML to alma if /staging, and send Enriched MARCXML to alma if /production
+				ldpjs: 'http://localhost:5101/',
+				util: 'http://localhost:5200/',
+				utilLang: 'http://localhost:5002/',
+				scriptshifter  :  'http://localhost:5003/',
+				publish: 'http://localhost:5200/publish/staging/',
 				bfdb: 'https://id.loc.gov/',
 				id: 'https://id.loc.gov/',
-				profiles: 'https://data.bibframe.app/bfe2/editor/new-profiles.json',
-				starting: 'https://data.bibframe.app/bfe2/editor/new-starting.json',
+				profiles: 'http://localhost:8081/profiles.json',
+				starting: 'http://localhost:8081/starting.json',
 				env: 'production',
-				publicEndpoints: true,
+				publicEndpoints: false,
 				displayLCOnlyFeatures: false
 				},
 
@@ -79,10 +78,10 @@ const config = {
 			util: "https://data.bibframe.app/util/",
 			utilLang: "https://data.bibframe.app/util-lang/",
 			scriptshifter  :  'https://data.bibframe.app/scriptshifter/',
-			publish: "https://data.bibframe.app/util/publish/staging",
+			publish: "https://data.bibframe.app/util/publish/production/",
 			bfdb: "https://id.loc.gov/",
-			profiles: "https://data.bibframe.app/bfe2/editor/new-profiles.json",
-			starting: "https://data.bibframe.app/bfe2/editor/new-starting.json",
+			profiles: "https://data.bibframe.app/bfe2/editor/profiles.json",
+			starting: "https://data.bibframe.app/bfe2/editor/starting.json",
 			id: 'https://id.loc.gov/',
 			env: "production",
 			publicEndpoints: true,
@@ -122,7 +121,7 @@ const config = {
 
 
 
-	postUsingAlmaXmlFormat: false,
+	postUsingAlmaXmlFormat: true,
 
 
 
