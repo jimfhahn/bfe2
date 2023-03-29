@@ -15,8 +15,8 @@ const config = {
 				publish: 'http://localhost:5200/publish/staging/',
 				bfdb: 'https://id.loc.gov/',
 				id: 'https://id.loc.gov/',
-				profiles: 'http://localhost:8081/profiles.json',
-				starting: 'http://localhost:8081/starting.json',
+				profiles: 'http://localhost:8080/profiles.json',
+				starting: 'http://localhost:8080/starting.json',
 				env: 'production',
 				publicEndpoints: true,
 				displayLCOnlyFeatures: false
@@ -75,10 +75,8 @@ const config = {
 
 	returnUrls: function(){
 
-		if (window.location.href.startsWith('http://localhost:8081/')){
+		if (window.location.href.startsWith('http://localhost:8080/')){
 			return this.regionUrls.dev
-		}else if (window.location.href.startsWith('https://3001')){
-			return this.regionUrls.staging
 		}else if (window.location.href.startsWith('https://editor.id')){
 			return this.regionUrls.production
 		}else if (window.location.href.includes('bibframe.org/marva')){
