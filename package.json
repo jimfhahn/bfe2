@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "serve": "vue-cli-service serve --host localhost",
+    "serve": "vue-cli-service serve --host localhost --port 8080",
+    "docker-serve": "export NODE_OPTIONS=--openssl-legacy-provider && vue-cli-service serve --host 0.0.0.0 --port 8080",
     "build": "vue-cli-service build --host data.bibframe.app",
     "start": "npm run build"
   },

@@ -1,4 +1,5 @@
 import config from "./config"
+
 // import store from "../store";
 const short = require('short-uuid');
 const translator = short();
@@ -34,11 +35,13 @@ const lookupUtil = {
 
       // if we use the memberOf there might be a id URL in the params, make sure its not https
       url = url.replace('memberOf=https://id.loc.gov/','memberOf=http://id.loc.gov/')
+//define modes
 
-      let options = {}
+      let options = {mode: "cors"}
       if (json){
         options = {headers: {'Content-Type': 'application/json', 'Accept': 'application/json'}, mode: "cors"}        
       }
+
       // console.log("url:",url)
       // console.log('options:',options)
       try{
@@ -476,12 +479,12 @@ const lookupUtil = {
       let subjectUrlComplex = config.lookupConfig['http://id.loc.gov/authorities/subjects'].modes[0]['LCSH All'].url.replace('<QUERY>',complexVal).replace('&count=25','&count=5')+'&rdftype=ComplexType'
       let subjectUrlSimple = config.lookupConfig['http://id.loc.gov/authorities/subjects'].modes[0]['LCSH All'].url.replace('<QUERY>',searchVal).replace('&count=25','&count=4')+'&rdftype=SimpleType'
 
-      let worksUrlKeyword = config.lookupConfig['https://preprod-8080.id.loc.gov/resources/works'].modes[0]['Works - Keyword'].url.replace('<QUERY>',searchVal).replace('&count=25','&count=5')
-      let worksUrlAnchored = config.lookupConfig['https://preprod-8080.id.loc.gov/resources/works'].modes[0]['Works - Left Anchored'].url.replace('<QUERY>',searchVal).replace('&count=25','&count=5')
+      let worksUrlKeyword = config.lookupConfig['https://id.loc.gov/resources/works'].modes[0]['Works - Keyword'].url.replace('<QUERY>',searchVal).replace('&count=25','&count=5')
+      let worksUrlAnchored = config.lookupConfig['https://id.loc.gov/resources/works'].modes[0]['Works - Left Anchored'].url.replace('<QUERY>',searchVal).replace('&count=25','&count=5')
 
 
-      let hubsUrlKeyword = config.lookupConfig['https://preprod-8080.id.loc.gov/resources/works'].modes[0]['Hubs - Keyword'].url.replace('<QUERY>',searchVal).replace('&count=25','&count=5')
-      let hubsUrlAnchored = config.lookupConfig['https://preprod-8080.id.loc.gov/resources/works'].modes[0]['Hubs - Left Anchored'].url.replace('<QUERY>',searchVal).replace('&count=25','&count=5')
+      let hubsUrlKeyword = config.lookupConfig['https://id.loc.gov/resources/works'].modes[0]['Hubs - Keyword'].url.replace('<QUERY>',searchVal).replace('&count=25','&count=5')
+      let hubsUrlAnchored = config.lookupConfig['https://id.loc.gov/resources/works'].modes[0]['Hubs - Left Anchored'].url.replace('<QUERY>',searchVal).replace('&count=25','&count=5')
 
 
 
@@ -695,8 +698,8 @@ const lookupUtil = {
 
           //if we are in production use preprod
           if (config.returnUrls().env == 'production' || config.returnUrls().env == 'staging'){
-            jsonuri = jsonuri.replace('http://id.', 'https://preprod-8080.id.')
-            jsonuri = jsonuri.replace('https://id.', 'https://preprod-8080.id.')
+            jsonuri = jsonuri.replace('http://id.', 'https://id.')
+            jsonuri = jsonuri.replace('https://id.', 'https://id.')
             
           }
 
@@ -707,7 +710,7 @@ const lookupUtil = {
             jsonuri = jsonuri.replace('http://preprod.id.','https://id.')
             jsonuri = jsonuri.replace('https://preprod-8230.id.loc.gov','https://id.loc.gov')
             jsonuri = jsonuri.replace('https://test-8080.id.lctl.gov','https://id.loc.gov')
-            jsonuri = jsonuri.replace('https://preprod-8080.id.loc.gov','https://id.loc.gov')
+            jsonuri = jsonuri.replace('https://id.loc.gov','https://id.loc.gov')
             jsonuri = jsonuri.replace('https://preprod-8288.id.loc.gov','https://id.loc.gov')
           }
 
@@ -807,8 +810,8 @@ const lookupUtil = {
 
                   if (url.includes('/instances/') || url.includes('/works/') || url.includes('/hubs/')){
                     if (config.returnUrls().env === 'production'){
-                      url = url.replace('https://id.','https://preprod-8080.id.')
-                      url = url.replace('http://id.','http://preprod-8080.id.')
+                      url = url.replace('https://id.','https://id.')
+                      url = url.replace('http://id.','http://id.')
                     }
                   }
 
@@ -2017,8 +2020,8 @@ const lookupUtil = {
         let subjectUrlTemporal = config.lookupConfig['http://id.loc.gov/authorities/subjects'].modes[0]['LCSH All'].url.replace('<QUERY>',searchVal).replace('&count=25','&count=5')+'&memberOf=http://id.loc.gov/authorities/subjects/collection_TemporalSubdivisions'
         let subjectUrlGenre = config.lookupConfig['http://id.loc.gov/authorities/subjects'].modes[0]['LCSH All'].url.replace('<QUERY>',searchVal).replace('&count=25','&count=5')+'&rdftype=GenreForm'
 
-        let worksUrlAnchored = config.lookupConfig['https://preprod-8080.id.loc.gov/resources/works'].modes[0]['Works - Left Anchored'].url.replace('<QUERY>',searchVal).replace('&count=25','&count=5')
-        let hubsUrlAnchored = config.lookupConfig['https://preprod-8080.id.loc.gov/resources/works'].modes[0]['Hubs - Left Anchored'].url.replace('<QUERY>',searchVal).replace('&count=25','&count=5')
+        let worksUrlAnchored = config.lookupConfig['https://id.loc.gov/resources/works'].modes[0]['Works - Left Anchored'].url.replace('<QUERY>',searchVal).replace('&count=25','&count=5')
+        let hubsUrlAnchored = config.lookupConfig['https://id.loc.gov/resources/works'].modes[0]['Hubs - Left Anchored'].url.replace('<QUERY>',searchVal).replace('&count=25','&count=5')
 
         let subjectUrlHierarchicalGeographic = config.lookupConfig['HierarchicalGeographic'].modes[0]['All'].url.replace('<QUERY>',searchVal).replace('&count=25','&count=5')            
         let subjectUrlHierarchicalGeographicLCSH = config.lookupConfig['http://id.loc.gov/authorities/subjects'].modes[0]['LCSH All'].url.replace('<QUERY>',searchVal).replace('&count=25','&count=5')+ '&rdftype=HierarchicalGeographic'         
